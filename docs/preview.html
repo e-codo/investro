@@ -237,7 +237,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
 <div class="pv">
   <div>
-    <p><b>Макет.</b> Бумаги и суммы из вашего отчёта 04.10.2026, история прошлых месяцев и график купонов условные. Расчёты настоящие по формулам ТЗ. Ничего не сохраняется. Вход: demo@mail.ru и пароль 12345678.</p>
+    <p><b>Макет.</b> Август и сентябрь — ваши реальные месячные отчёты, октябрь загрузите кнопкой «+» (сохраняется до перезагрузки). График будущих купонов условный. Расчёты настоящие по формулам ТЗ. Вход: demo@mail.ru и пароль 12345678.</p>
     <div class="row">
       <div class="seg" role="group" aria-label="Экран">
         <button type="button" id="v-login" aria-pressed="false">Вход</button>
@@ -245,9 +245,10 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
         <button type="button" id="v-set" aria-pressed="false">Настройки</button>
       </div>
       <div class="seg" role="group" aria-label="Экран проверки">
-        <button type="button" data-rv="new" aria-pressed="false">Проверка: новый месяц</button>
-        <button type="button" data-rv="upd" aria-pressed="false">Актуализация</button>
-        <button type="button" data-rv="bad" aria-pressed="false">Ошибка</button>
+        <button type="button" data-rv="new" aria-pressed="false">Новый месяц (окт)</button>
+        <button type="button" data-rv="upd" aria-pressed="false">Актуализация (сен)</button>
+        <button type="button" data-rv="ytd" aria-pressed="false">Отчёт с начала года</button>
+        <button type="button" data-rv="bad" aria-pressed="false">Ошибка суммы</button>
       </div>
     </div>
   </div>
@@ -273,20 +274,34 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   };
 
   /* ---------- данные примера (копейки) ---------- */
+  /* Снимки: реальные месячные отчёты ВТБ за август и сентябрь 2026. d — дата снимка (конец периода). */
   var S = [
-    { m: "2026-08", d: "2026-08-31", ps: "2026-01-01", fd: "2026-08-05", value: 1201020, cash: 3120, dep: 1200000, ded: 0, wd: 0, passive: 8800 },
-    { m: "2026-09", d: "2026-09-30", ps: "2026-01-01", value: 2419055, cash: 18040, dep: 1200000, ded: 0, wd: 0, passive: 17900 },
-    { m: "2026-10", d: "2026-10-04", ps: "2026-01-01", value: 3636873, cash: 25644, dep: 1200000, ded: 0, wd: 0, passive: 23189 }
+    { m: "2026-08", ps: "2026-08-01", d: "2026-08-31", value: 1810989, cash: 76, dep: 1800000, ded: 0, wd: 0, passive: 3690 },
+    { m: "2026-09", ps: "2026-09-01", d: "2026-09-30", value: 3623786, cash: 25644, dep: 1800000, ded: 0, wd: 0, passive: 23189 }
   ];
-  /* состав последнего снимка из отчёта 04.10.2026; class — id класса */
-  var POS = [
-    { n: "ОФЗ 26245", t: "bond", c: "bond", q: 6, v: 520386, secid: "" },
-    { n: "РЖД 1Р-44R", t: "bond", c: "bond", q: 17, v: 1657483, secid: "", floater: true },
-    { n: "ВИМ - Индекс Мосбиржи", t: "fund", c: "eq", q: 55, v: 691075 },
-    { n: "Ликвидность", t: "fund", c: "liq", q: 3532, v: 742285 }
+  /* Состав по месяцам (название, количество, стоимость) */
+  var POSBY = {
+    "2026-08": [{ n: "ОФЗ 26245", q: 6, v: 531666 }, { n: "ВИМ - Индекс Мосбиржи", q: 46, v: 546710 }, { n: "Ликвидность", q: 3532, v: 732537 }],
+    "2026-09": [{ n: "ОФЗ 26245", q: 6, v: 520452 }, { n: "РЖД 1Р-44R", q: 17, v: 1652893 }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 683925 }, { n: "Ликвидность", q: 3532, v: 740872 }]
+  };
+  /* Бумаги, привязанные к классам (запоминаются) */
+  var INSTR = [
+    { n: "ОФЗ 26245", t: "bond", c: "bond", secid: "" },
+    { n: "РЖД 1Р-44R", t: "bond", c: "bond", secid: "", floater: true },
+    { n: "ВИМ - Индекс Мосбиржи", t: "fund", c: "eq" },
+    { n: "Ликвидность", t: "fund", c: "liq" }
   ];
+  var POS = [];
+  function instr(n) { return INSTR.filter(function (i) { return i.n === n; })[0]; }
+  function refreshPos() {
+    var last = S[S.length - 1];
+    POS = (POSBY[last.m] || []).map(function (p) { var i = instr(p.n) || {}; return { n: p.n, q: p.q, v: p.v, t: i.t, c: i.c, secid: i.secid, floater: i.floater }; });
+  }
+  function midDate(a, b) { return new Date((Date.parse(a) + Date.parse(b)) / 2).toISOString().slice(0, 10); }
+  S.forEach(function (x) { x.fd = x.fd || midDate(x.ps, x.d); });
   /* факт купонов из отчёта по месяцам; график на 1 шт. условный (в отчёте будущих купонов нет) */
   var FACT = { "2026-09": 19499 };
+  var curM = "2026-10";
   var SCHED = [
     { who: 1, per: 1147, every: 1, day: 24 },
     { who: 0, per: 3690, months: [10, 4], day: 18 }
@@ -341,7 +356,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     for (i = 0; i < S.length; i++) { own += net(S[i]) - S[i].wd; ded += S[i].ded; }
     var last = S[S.length - 1];
     var profit = last.value - own;
-    var flows = S.map(function (s, i) { return { d: i === 0 ? s.fd : s.d, v: -(net(s) - s.wd) }; });
+    var flows = S.map(function (s) { return { d: s.fd, v: -(net(s) - s.wd) }; });
     flows.push({ d: last.d, v: last.value });
     var hist = days(flows[0].d, last.d);
     var xirr = hist >= 90 ? xirrOf(flows) : null;
@@ -365,13 +380,14 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   function monthKey(y, m) { return y + "-" + (m < 10 ? "0" : "") + m; }
 
   /* купонный календарь: 3 прошедших, текущий и 11 вперёд */
+  function qty(n) { var p = POS.filter(function (x) { return x.n === n; })[0]; return p ? p.q : 0; }
   function couponWindow() {
     var out = [], y = 2026, m = 7, i;
     for (i = 0; i < 15; i++) {
       var key = monthKey(y, m), past = i < 3, items = [], sum = 0;
-      if (past) { sum = FACT[key] || 0; if (sum) items.push({ n: POS[1].n, k: sum, a: false }); }
+      if (past) { sum = FACT[key] || 0; if (sum) items.push({ n: "РЖД 1Р-44R", k: sum, a: false }); }
       else {
-        var qB = POS[1].q, qA = POS[0].q;
+        var qB = qty("РЖД 1Р-44R"), qA = qty("ОФЗ 26245");
         // индексы месяцев: m-1
         var kB = qB * SCHED[0].per; sum += kB; items.push({ n: "РЖД 1Р-44R", k: kB, a: true });
         if (SCHED[1].months.indexOf(m - 1) > -1) { var kA = qA * SCHED[1].per; sum += kA; items.push({ n: "ОФЗ 26245", k: kA, a: false }); }
@@ -488,14 +504,13 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     var dy = el.querySelector("[data-delyes]"); if (dy) dy.onclick = function () { delAsk = false; selMonth = null; calendar(); toast("Снимок не удалён: это макет"); };
   }
   function card(s) {
-    var ratio = s.value / S[S.length - 1].value;
-    var rows = POS.map(function (p) { var q = Math.max(1, Math.round(p.q * ratio)); return "<li><span>" + esc(p.n) + '</span><span class="num">' + q + " шт.</span></li>"; }).join("");
-    var cp = FACT[s.m] ? money(FACT[s.m]) : s.m === "2026-10" ? "194,99 ₽ (прогноз)" : "—";
+    var rows = (POSBY[s.m] || []).map(function (p) { return "<li><span>" + esc(p.n) + '</span><span class="num">' + p.q + " шт. · " + money(p.v) + "</span></li>"; }).join("");
+    var cp = FACT[s.m] ? money(FACT[s.m]) : s.m === S[S.length - 1].m && s.m === curM ? "194,99 ₽ (прогноз на 24.10)" : "нет";
     var confirm = delAsk ?
       '<div class="warn">Удалить снимок за ' + mlabel(s.m) + '? Взнос следующего месяца пересчитается относительно предыдущего снимка, ручная правка там сбросится.</div><div class="acts"><button type="button" class="btn fill" data-delyes>Да, удалить</button><button type="button" class="btn ghost" data-delno>Отмена</button></div>' :
       '<div class="acts"><button type="button" class="btn" data-replace>Заменить отчёт</button><button type="button" class="danger" data-del>Удалить снимок</button></div>';
     return '<div class="mcard"><h3>' + mlabel(s.m) + "</h3><ul>" +
-      "<li><span>Дата отчёта</span><span class=\"num\">" + dmy(s.d) + "</span></li>" +
+      "<li><span>Период отчёта</span><span class=\"num\">" + dmy(s.ps) + " – " + dmy(s.d) + "</span></li>" +
       "<li><span>Стоимость</span><span class=\"num\">" + money(s.value) + "</span></li>" +
       "<li><span>Взнос месяца</span><span class=\"num\">" + money(s.dep) + (s.ded ? " (вычет " + money(s.ded) + ")" : "") + "</span></li>" +
       "<li><span>Купоны месяца</span><span class=\"num\">" + cp + "</span></li>" +
@@ -560,28 +575,27 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
   /* ---------- экран проверки ---------- */
   var RV = null;
+  var OCT = [{ n: "ОФЗ 26245", q: 6, v: 520692 }, { n: "РЖД 1Р-44R", q: 17, v: 1660033 }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 697675 }, { n: "Ликвидность", q: 3532, v: 742320 }];
   function scenario(kind) {
+    function withClass(list, liq) { return list.map(function (p) { var i = instr(p.n) || {}; return { n: p.n, q: p.q, v: p.n === "Ликвидность" && liq != null ? liq : p.v, c: i.c, t: i.t, secid: i.secid }; }); }
     var base = {
-      new: { mode: "new", month: "2026-11", date: "2026-11-29", ps: "2026-01-01", pe: "2026-11-29", dep: 4800000, wd: 0, value: 4125012, cash: 31012, ded: 0,
-        pos: [{ n: "ОФЗ 26245", q: 6, v: 524000, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 18, v: 1750000, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 700000, c: "eq", t: "fund" }, { n: "Ликвидность", q: 5300, v: 1120000, c: "liq", t: "fund" }],
-        coupons: ["РЖД 1Р-44R · 24.10.2026 · 194,99 ₽"] },
-      upd: { mode: "upd", month: "2026-10", date: "2026-10-07", ps: "2026-01-01", pe: "2026-10-07", dep: 3600000, wd: 0, value: 3642194, cash: 25644, ded: 0,
-        pos: [{ n: "ОФЗ 26245", q: 6, v: 523000, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 17, v: 1658900, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 692300, c: "eq", t: "fund" }, { n: "Ликвидность", q: 3532, v: 742350, c: "liq", t: "fund" }],
-        coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] },
-      bad: { mode: "upd", month: "2026-10", date: "2026-10-04", ps: "2026-01-01", pe: "2026-10-04", dep: 3600000, wd: 0, value: 3636873, cash: 25644, ded: 0,
-        pos: [{ n: "ОФЗ 26245", q: 6, v: 520386, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 17, v: 1657483, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 691075, c: "eq", t: "fund" }, { n: "Ликвидность", q: 3532, v: 617785, c: "liq", t: "fund" }],
-        coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] }
+      new: { month: "2026-10", ps: "2026-10-01", pe: "2026-10-05", gen: "2026-10-05", dep: 0, value: 3646364, cash: 25644, ded: 0, passive: 23189,
+        pos: withClass(OCT), coupons: [] },
+      upd: { month: "2026-09", ps: "2026-09-01", pe: "2026-09-30", gen: "2026-10-05", dep: 1800000, value: 3623786, cash: 25644, ded: 0, passive: 23189,
+        pos: withClass(POSBY["2026-09"]), coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] },
+      ytd: { month: "2026-10", ps: "2026-01-01", pe: "2026-10-05", gen: "2026-10-05", dep: 3600000, value: 3646364, cash: 25644, ded: 0, passive: 23189,
+        pos: withClass(OCT), coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] },
+      bad: { month: "2026-09", ps: "2026-09-01", pe: "2026-09-30", gen: "2026-10-05", dep: 1800000, value: 3623786, cash: 25644, ded: 0, passive: 23189,
+        pos: withClass(POSBY["2026-09"], 616372), coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] }
     };
-    var s = JSON.parse(JSON.stringify(base[kind])); s.kind = kind; return s;
+    var r = JSON.parse(JSON.stringify(base[kind])); r.kind = kind;
+    r.mode = S.some(function (x) { return x.m === r.month; }) ? "upd" : "new";
+    r.fd = midDate(r.ps, r.pe);
+    return r;
   }
   function contribution(r) {
-    /* раздел 2.2: сравнение с предыдущим месяцем */
-    var prev = S.filter(function (s) { return s.m < r.month; }).pop();
-    if (!prev) return { val: r.dep, rule: "Первый отчёт: пополнения за период целиком.", warn: false };
-    var prevDep = S.filter(function (s) { return s.m <= prev.m; }).reduce(function (a, s) { return a + s.dep; }, 0);
-    if (r.ps === prev.ps) return { val: r.dep - prevDep, rule: "Начало периода то же, что у отчёта за " + mlabel(prev.m) + ": " + money(r.dep) + " − " + money(prevDep) + ".", warn: false };
-    if (r.ps > prev.d) return { val: r.dep, rule: "Период начался после прошлого отчёта: пополнения целиком.", warn: false };
-    return { val: 0, rule: "Периоды пересекаются нестандартно: сумма требует ручной правки.", warn: true };
+    /* раздел 2.2: взнос месяца = пополнения отчёта */
+    return { val: r.dep, rule: "Период " + dmy(r.ps) + " – " + dmy(r.pe) + ": пополнения в отчёте " + money(r.dep) + ". Взнос месяца равен им." };
   }
   function openReview(kind) {
     RV = scenario(kind); renderReview();
@@ -599,17 +613,18 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (Math.abs(diff) > 100) errors.push("Позиции и деньги (" + money(posSum + r.cash) + ") не сходятся со стоимостью портфеля (" + money(r.value) + "): разница " + money(diff, true) + ". Исправьте числа или загрузите другой отчёт.");
     if (contribVal < 0) errors.push("Взнос месяца получился отрицательным. Проверьте период отчёта.");
     if (d > contribVal) errors.push("Налоговый вычет больше взноса месяца.");
-    if (c.warn) warns.push("Периоды отчётов пересекаются. Проверьте взнос вручную.");
+    if (r.ps.slice(0, 7) !== r.pe.slice(0, 7)) errors.unshift("Отчёт охватывает несколько месяцев (" + dmy(r.ps) + " – " + dmy(r.pe) + "). Скачайте отчёт за один месяц: с 1-го по последнее число, для текущего месяца по сегодня.");
+    var periodBad = r.ps.slice(0, 7) !== r.pe.slice(0, 7);
+    if (!periodBad && r.ps.slice(8) !== "01") warns.push("Период начинается не с 1-го числа: пополнения до начала периода в отчёте не видны.");
     var h = '<div class="ov" id="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="Проверка отчёта">';
     h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2>Проверьте отчёт</h2><button class="ibtn" type="button" id="rv-x" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
     h += '<span class="mode">' + (r.mode === "new" ? "Отметить месяц · снимка за этот месяц нет" : "Актуализировать данные · снимок за этот месяц уже есть") + "</span>";
-    h += '<div class="grid2"><div class="fld"><label for="rv-m">Месяц снимка</label><select class="inp" id="rv-m">';
-    [["2026-09", "сен 2026"], ["2026-10", "окт 2026"], ["2026-11", "ноя 2026"]].forEach(function (o) { h += '<option value="' + o[0] + '"' + (o[0] === r.month ? " selected" : "") + ">" + o[1] + "</option>"; });
-    h += '</select></div><div class="fld"><label>Дата отчёта</label><div class="inp num" style="display:flex;align-items:center">' + dmy(r.date) + "</div></div></div>";
-    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + "</div>";
+    h += '<div class="grid2"><div class="fld"><label>Месяц снимка</label><div class="inp" style="display:flex;align-items:center">' + (periodBad ? "—" : mlabel(r.month)) + '</div></div><div class="fld"><label>Дата снимка</label><div class="inp num" style="display:flex;align-items:center">' + dmy(r.pe) + "</div></div></div>";
+    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + ". Дата формирования файла " + dmy(r.gen) + " не используется.</div>";
     h += '<div class="grid2"><div class="fld"><label for="rv-v">Стоимость, ₽</label><input class="inp num" id="rv-v" inputmode="decimal" value="' + (r.value / 100).toFixed(2).replace(".", ",") + '"></div><div class="fld"><label for="rv-c">Деньги, ₽</label><input class="inp num" id="rv-c" inputmode="decimal" value="' + (r.cash / 100).toFixed(2).replace(".", ",") + '"></div></div>';
     h += '<div class="grp"><h3>Взнос месяца</h3><div class="calc"><div><span>Пополнения в отчёте</span><span class="num">' + money(r.dep) + "</span></div><div><span>Взнос месяца</span><b class=\"num\">" + money(contribVal) + '</b></div><div><span class="note" style="flex:1 1 100%">' + esc(c.rule) + "</span></div></div>";
     h += '<div class="grid2"><div class="fld"><label for="rv-mc">Взнос вручную, ₽</label><input class="inp num" id="rv-mc" inputmode="decimal" placeholder="авто" value="' + (r.manualContrib != null ? (r.manualContrib / 100).toFixed(2).replace(".", ",") : "") + '"></div><div class="fld"><label for="rv-d">Из них налоговый вычет, ₽</label><input class="inp num" id="rv-d" inputmode="decimal" value="' + (d / 100).toFixed(2).replace(".", ",") + '"></div></div>';
+    h += '<div class="fld"><label for="rv-fd">Дата взноса (для расчёта доходности)</label><input class="inp num" id="rv-fd" value="' + dmy(r.fd) + '"><div class="hint">По умолчанию середина периода. Исправьте, если помните дату.</div></div>';
     h += '<div class="sum">Во «вложено своих» войдёт <b class="num">' + money(Math.max(0, contribVal - d)) + "</b>. Вычет попадёт в прибыль.</div></div>";
     h += '<div class="grp"><h3>Позиции</h3>';
     r.pos.forEach(function (p, i) {
@@ -622,7 +637,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     h += '<div class="grp"><h3>Проверки</h3>';
     h += '<div class="ok">✓ Документ «Аналитика портфеля» ВТБ</div>';
     h += Math.abs(diff) <= 100 ? '<div class="ok">✓ Позиции + деньги = стоимость (допуск ±1 ₽)</div>' : "";
-    h += '<div class="ok">✓ Дата отчёта не раньше предыдущего снимка</div>';
+    h += !periodBad ? '<div class="ok">✓ Период — один календарный месяц</div>' : "";
     errors.forEach(function (e) { h += '<div class="err" role="alert">' + esc(e) + "</div>"; });
     warns.forEach(function (e) { h += '<div class="warn">' + esc(e) + "</div>"; });
     h += "</div>";
@@ -636,14 +651,22 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     function num(id) { var v = parseFloat(String(document.getElementById(id).value).replace(/\s/g, "").replace(",", ".")); return isNaN(v) ? null : Math.round(v * 100); }
     document.getElementById("rv-x").onclick = closeReview;
     document.getElementById("rv-cancel").onclick = closeReview;
-    document.getElementById("rv-save").onclick = function () { closeReview(); toast("Макет: данные не сохраняются"); };
+    document.getElementById("rv-save").onclick = function () {
+      var snap = { m: r.month, ps: r.ps, d: r.pe, fd: r.fd, value: r.value, cash: r.cash, dep: contribVal, ded: r.ded, wd: 0, passive: r.passive };
+      var at = S.map(function (x) { return x.m; }).indexOf(r.month);
+      if (at >= 0) S[at] = snap; else { S.push(snap); S.sort(function (a, b) { return a.m < b.m ? -1 : 1; }); }
+      POSBY[r.month] = r.pos.map(function (p) { return { n: p.n, q: p.q, v: p.v }; });
+      r.pos.forEach(function (p) { var i = instr(p.n); if (i) i.c = p.c; });
+      var was = r.mode;
+      closeReview(); refreshPos(); render();
+      toast(was === "new" ? "Снимок за " + mlabel(r.month) + " сохранён (макет, до перезагрузки)" : "Снимок за " + mlabel(r.month) + " обновлён");
+    };
     document.getElementById("ov").addEventListener("click", function (e) { if (e.target.id === "ov") closeReview(); });
     function rerender(fn) { return function () { fn(); renderReview(); }; }
     document.getElementById("rv-v").onchange = rerender(function () { var v = num("rv-v"); if (v != null) r.value = v; });
     document.getElementById("rv-c").onchange = rerender(function () { var v = num("rv-c"); if (v != null) r.cash = v; });
     document.getElementById("rv-d").onchange = rerender(function () { var v = num("rv-d"); r.ded = v == null ? 0 : v; });
     document.getElementById("rv-mc").onchange = rerender(function () { r.manualContrib = num("rv-mc"); });
-    document.getElementById("rv-m").onchange = function (e) { r.month = e.target.value; r.mode = S.some(function (s) { return s.m === r.month; }) ? "upd" : "new"; renderReview(); };
     layer.querySelectorAll("[data-k]").forEach(function (s) { s.onchange = function () { r.pos[+s.dataset.k].c = s.value; }; });
     var first = document.getElementById("rv-x"); if (first) first.focus({ preventScroll: true });
   }
@@ -659,7 +682,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     h += sec("Стратегия", '<div class="mini"><label class="tgl"><input type="checkbox" id="s-on"' + (d.strategyOn ? " checked" : "") + '><span>Использовать стратегию и блок «Аллокация»</span></label>' +
       d.classes.map(function (c, i) { return '<div class="rowx"><input class="inp" data-cn="' + i + '" aria-label="Название класса" value="' + esc(c.name) + '"><input class="inp num" data-cp="' + i + '" aria-label="Доля, %" inputmode="numeric" value="' + c.pct + '"><button type="button" class="danger" data-delc="' + i + '"' + (d.classes.length <= 1 ? " disabled" : "") + ">Удалить</button></div>"; }).join("") +
       '<div class="sum">Сумма долей: <b class="num">' + sum + '%</b>' + (sum === 100 ? "" : " (нужно ровно 100%)") + '</div><button type="button" class="linkbtn" id="s-addc"' + (d.classes.length >= 5 ? " disabled" : "") + '>Добавить класс (до 5)</button><div class="fld"><label for="s-sn">Имя стратегии</label><input class="inp" id="s-sn" placeholder="' + d.classes.map(function (c) { return c.pct; }).join(" / ") + '" value="' + esc(d.stratName) + '"></div></div>');
-    h += sec("Бумаги", '<div class="mini">' + POS.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.secid ? "SECID " + esc(p.secid) : "без SECID") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
+    h += sec("Бумаги", '<div class="mini">' + INSTR.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.secid ? "SECID " + esc(p.secid) : p.t === "bond" ? "SECID не подтверждён" : "SECID не нужен") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
     h += sec("Блоки главного экрана", '<div class="mini">' + BLOCK_NAMES.map(function (n, i) { return '<label class="tgl"><input type="checkbox" data-b="' + i + '"' + (d.vis[i] ? " checked" : "") + "><span>" + (i + 1) + ". " + n + "</span></label>"; }).join("") + "</div>");
     h += sec("Данные", '<div class="mini">' + S.slice().reverse().map(function (s) { return '<div class="rowm"><span class="num">' + mlabel(s.m) + " · " + money(s.value) + '</span><button type="button" class="danger" data-dels="' + s.m + '">Удалить</button></div>'; }).join("") + '<button type="button" class="linkbtn" id="s-all">Удалить все данные</button><div id="s-allbox"></div></div>');
     h += "</div>";
@@ -679,10 +702,10 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       document.querySelectorAll("[data-b]").forEach(function (e) { d.vis[+e.dataset.b] = e.checked; });
     }
     function again() { sync(); var st = window.scrollY; render(); window.scrollTo(0, st); }
-    document.querySelectorAll("#app input, #app textarea, #app select").forEach(function (e) { e.addEventListener("change", function () { if (e.dataset.pc != null) { POS[+e.dataset.pc].c = e.value; return; } if (e.id === "s-nm") return; again(); }); });
+    document.querySelectorAll("#app input, #app textarea, #app select").forEach(function (e) { e.addEventListener("change", function () { if (e.dataset.pc != null) { INSTR[+e.dataset.pc].c = e.value; refreshPos(); return; } if (e.id === "s-nm") return; again(); }); });
     document.getElementById("s-addm").onclick = function () { sync(); var v = Math.round(numv("s-nm")) * 100; if (v > 0 && d.milestones.indexOf(v) < 0) d.milestones.push(v); var st = window.scrollY; render(); window.scrollTo(0, st); };
     document.querySelectorAll("[data-delm]").forEach(function (b) { b.onclick = function () { sync(); d.milestones = d.milestones.filter(function (m) { return m !== +b.dataset.delm; }); var st = window.scrollY; render(); window.scrollTo(0, st); }; });
-    document.querySelectorAll("[data-delc]").forEach(function (b) { b.onclick = function () { sync(); var i = +b.dataset.delc, gone = d.classes.splice(i, 1)[0], to = d.classes[0].id; POS.forEach(function (p) { if (p.c === gone.id) p.c = to; }); var st = window.scrollY; render(); window.scrollTo(0, st); toast("Бумаги класса перенесены в «" + d.classes[0].name + "»"); }; });
+    document.querySelectorAll("[data-delc]").forEach(function (b) { b.onclick = function () { sync(); var i = +b.dataset.delc, gone = d.classes.splice(i, 1)[0], to = d.classes[0].id; INSTR.forEach(function (p) { if (p.c === gone.id) p.c = to; }); refreshPos(); var st = window.scrollY; render(); window.scrollTo(0, st); toast("Бумаги класса перенесены в «" + d.classes[0].name + "»"); }; });
     document.getElementById("s-addc").onclick = function () { sync(); d.classes.push({ id: "c" + Date.now(), name: "Новый класс", pct: 0 }); var st = window.scrollY; render(); window.scrollTo(0, st); };
     document.querySelectorAll("[data-dels]").forEach(function (b) { b.onclick = function () { toast("Макет: снимок не удалён"); }; });
     document.getElementById("s-all").onclick = function () {
@@ -802,6 +825,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && RV) closeReview(); });
   var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (view === "dash") { growth(); passive(); } }, 150); });
   setInterval(clock, 30000);
+  refreshPos();
   render();
 })();
 </script>
