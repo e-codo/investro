@@ -115,6 +115,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .mcard li span:last-child { color: var(--ink-2); }
 .acts { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .btn { height: 40px; padding: 0 18px; border-radius: 999px; border: 1px solid var(--ink); font-size: 14px; font-weight: 500; transition: background .15s, border-color .15s, color .15s; }
+.btn { display: inline-flex; align-items: center; justify-content: center; white-space: nowrap; }
 .btn.sm { height: 34px; padding: 0 14px; font-size: 13px; }
 .btn.fill { background: var(--ink); color: var(--paper); }
 .btn.fill:hover, .btn.fill:focus-visible { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
@@ -626,7 +627,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       '<p class="sum">Отчёт ВТБ «Аналитика портфеля» за один месяц: с 1-го числа по последнее, для текущего месяца по сегодня. Файл читается в браузере и на сервер не отправляется.</p>' +
       '<label class="drop" id="drop" for="up-file"><b>Перетащите файл или выберите</b><span class="note">PDF отчёта или таблица .xlsx по шаблону</span><span class="btn fill" role="button">Выбрать файл</span><input id="up-file" type="file" accept=".pdf,.xlsx" hidden></label>' +
       '<div class="grp"><h3>Если формат PDF изменился</h3><p class="note" style="margin:0">Заполните таблицу по шаблону (можно через ИИ по тексту отчёта) и загрузите её здесь. Шаблон проверяет суммы и даты при вводе.</p>' +
-      '<button class="btn" type="button" id="up-tpl">Скачать шаблон таблицы (.xlsx)</button></div></div></div>';
+      '<button class="btn" type="button" id="up-tpl" style="justify-self:start">Скачать шаблон таблицы (.xlsx)</button></div></div></div>';
     document.getElementById("layer").innerHTML = h;
     function pick() { document.getElementById("layer").innerHTML = ""; toast("Макет не читает файлы: показан пример разбора"); openReview("new"); }
     document.getElementById("up-x").onclick = function () { document.getElementById("layer").innerHTML = ""; };
