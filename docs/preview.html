@@ -145,6 +145,8 @@ svg.chart text { font-family: var(--font); fill: var(--ink-3); }
 .cpl b { font-size: 22px; font-weight: 500; letter-spacing: -.02em; }
 .cpl small { font-size: 12px; color: var(--ink-2); overflow-wrap: anywhere; }
 .cpl .now { border-color: var(--ink); }
+.cpl > div.off { border-style: dashed; background: transparent; }
+.sec-h .linkbtn { font-size: 13px; }
 
 /* аллокация */
 .arow { border-top: 1px solid var(--line); padding: 18px 0; display: grid; gap: 10px; }
@@ -381,21 +383,46 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
   /* купонный календарь: 3 прошедших, текущий и 11 вперёд */
   function qty(n) { var p = POS.filter(function (x) { return x.n === n; })[0]; return p ? p.q : 0; }
-  function couponWindow() {
-    var out = [], y = 2026, m = 7, i;
-    for (i = 0; i < 15; i++) {
-      var key = monthKey(y, m), past = i < 3, items = [], sum = 0;
-      if (past) { sum = FACT[key] || 0; if (sum) items.push({ n: "РЖД 1Р-44R", k: sum, a: false }); }
-      else {
-        var qB = qty("РЖД 1Р-44R"), qA = qty("ОФЗ 26245");
-        // индексы месяцев: m-1
-        var kB = qB * SCHED[0].per; sum += kB; items.push({ n: "РЖД 1Р-44R", k: kB, a: true });
-        if (SCHED[1].months.indexOf(m - 1) > -1) { var kA = qA * SCHED[1].per; sum += kA; items.push({ n: "ОФЗ 26245", k: kA, a: false }); }
-      }
-      out.push({ key: key, y: y, m: m, past: past, now: i === 3, sum: sum, items: items });
-      m++; if (m > 12) { m = 1; y++; }
+  var CUR_IDX = 9; /* октябрь 2026: индекс месяца от января 2026 */
+  function couponMonth(y, m) {
+    var key = monthKey(y, m), ahead = (y - 2026) * 12 + (m - 1) - CUR_IDX, items = [], sum = 0, kind;
+    if (ahead < 0) {
+      kind = key >= S[0].m ? "past" : "none";
+      sum = FACT[key] || 0; if (sum) items.push({ n: "РЖД 1Р-44R", a: false });
+    } else if (ahead <= 11) {
+      kind = ahead === 0 ? "now" : "future";
+      var kB = qty("РЖД 1Р-44R") * SCHED[0].per; sum += kB; items.push({ n: "РЖД 1Р-44R", a: true });
+      if (SCHED[1].months.indexOf(m - 1) > -1) { sum += qty("ОФЗ 26245") * SCHED[1].per; items.push({ n: "ОФЗ 26245", a: false }); }
+    } else kind = "far";
+    return { key: key, y: y, m: m, kind: kind, sum: sum, items: items };
+  }
+  function couponTotal() { var t = 0, i; for (i = 0; i < 12; i++) { var m = (CUR_IDX + i) % 12 + 1, y = 2026 + Math.floor((CUR_IDX + i) / 12); t += couponMonth(y, m).sum; } return t; }
+  var cplOpen = false, cplYear = 2026;
+  function cplCard(x, i) {
+    var cls = x.kind === "past" ? "past" : x.kind === "now" ? "now" : x.kind === "none" || x.kind === "far" ? "off" : "";
+    var tag = x.kind === "past" ? "факт" : x.kind === "now" ? "сейчас" : x.kind === "future" ? "прогноз" : "";
+    var note = x.items.map(function (it) { return esc(it.n) + (it.a ? " ≈" : ""); }).join(", ") || (x.kind === "none" ? "нет отчёта" : x.kind === "far" ? "вне прогноза" : "нет выплат");
+    return '<div style="--d:' + (i * 40) + 'ms" class="' + cls + '"><span class="m"><span>' + MONTHS[x.m - 1] + " " + String(x.y).slice(2) + "</span><span>" + tag + '</span></span><b class="num">' + (x.sum ? money(x.sum) : "—") + "</b><small>" + note + "</small></div>";
+  }
+  function renderCoupons() {
+    var box = document.getElementById("cpl-box"), tg = document.getElementById("cpl-tg"); if (!box) return;
+    var h = "", i;
+    if (!cplOpen) {
+      h += '<div class="cpl">';
+      for (i = 2; i >= 0; i--) { var idx = CUR_IDX - i; h += cplCard(couponMonth(2026 + Math.floor(idx / 12), idx % 12 + 1), 2 - i); }
+      h += "</div>";
+    } else {
+      h += '<div class="nav" style="justify-content:flex-end;margin-bottom:12px"><button type="button" id="cpl-prev" aria-label="Предыдущий год"' + (cplYear <= 2026 ? " disabled" : "") + ">" + ICON.l + "</button><span>" + cplYear + '</span><button type="button" id="cpl-next" aria-label="Следующий год"' + (cplYear >= 2027 ? " disabled" : "") + ">" + ICON.r + '</button></div><div class="cpl">';
+      for (i = 1; i <= 12; i++) h += cplCard(couponMonth(cplYear, i), i - 1);
+      h += "</div>";
     }
-    return out;
+    var tot = couponTotal();
+    h += '<p class="coupons num">Итого за 12 мес. (текущий и 11 вперёд): ' + money(tot) + ", в среднем " + money(Math.round(tot / 12)) + " в месяц. Знак ≈ у флоатера: показан последний известный купон.</p>";
+    box.innerHTML = h;
+    tg.textContent = cplOpen ? "Свернуть" : "Весь календарь"; tg.setAttribute("aria-expanded", cplOpen ? "true" : "false");
+    var pv = document.getElementById("cpl-prev"), nx = document.getElementById("cpl-next");
+    if (pv) pv.onclick = function () { cplYear--; renderCoupons(); };
+    if (nx) nx.onclick = function () { cplYear++; renderCoupons(); };
   }
 
   /* ---------- главный экран ---------- */
@@ -431,7 +458,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (v[6] && hasBonds) {
       h += sec("Пассивный доход", '<div class="pass"><div><span class="lbl">В месяц сейчас</span><b class="num" data-count data-v="' + c.last.passive + '">' + money(c.last.passive) + '</b></div><div><span class="lbl">Прирост за 12 мес.</span><b class="num">—</b><i>нужен снимок годичной давности</i></div></div><div id="passive"></div>');
     }
-    if (v[7]) h += sec("Купонный календарь", couponCal());
+    if (v[7]) h += sec("Купонный календарь", '<div id="cpl-box"></div>', '<button class="linkbtn" type="button" id="cpl-tg" aria-expanded="false" aria-controls="cpl-box">Весь календарь</button>');
     if (v[8] && cfg.strategyOn) h += sec("Аллокация", alloc(c));
     if (v[9]) h += sec("Цитата", '<p class="quote">' + esc(cfg.quote) + "</p>");
     h += '<button class="fab" type="button" id="b-fab" aria-label="Загрузить отчёт">' + ICON.plus + "<span>Загрузить отчёт</span></button>";
@@ -453,16 +480,6 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       out += '<div style="margin-top:28px"><div class="track thin"><i data-w="' + p + '"></i></div><div class="prog-s num">До ' + rub0(next) + " осталось " + rub0(next - c.value) + "</div></div>";
     }
     return out;
-  }
-  function couponCal() {
-    var w = couponWindow(), tot = 0, idxc = 0, h = '<div class="cpl">';
-    w.forEach(function (x) {
-      if (!x.past) tot += x.sum;
-      var items = x.items.map(function (it) { return esc(it.n) + (it.a ? " ≈" : ""); }).join(", ") || "—";
-      h += '<div style="--d:' + (idxc++ * 40) + 'ms" class="' + (x.past ? "past" : x.now ? "now" : "") + '"><span class="m"><span>' + MONTHS[x.m - 1] + " " + String(x.y).slice(2) + "</span><span>" + (x.past ? "факт" : x.now ? "сейчас" : "") + "</span></span><b class=\"num\">" + (x.sum ? money(x.sum) : "—") + "</b><small>" + items + "</small></div>";
-    });
-    h += "</div>";
-    return h + '<p class="coupons num">Итого за 12 мес. (текущий и 11 вперёд): ' + money(tot) + ", в среднем " + money(Math.round(tot / 12)) + " в месяц. Знак ≈ у флоатера: показан последний известный купон.</p>";
   }
   function alloc(c) {
     var posSum = POS.reduce(function (a, p) { return a + p.v; }, 0), h = "";
@@ -753,7 +770,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (view === "login") { app.innerHTML = loginView(); bindLogin(); return; }
     if (view === "set") { app.innerHTML = settingsView(); bindSettings(); return; }
     app.innerHTML = dash();
-    clock(); calendar(); growth(); passive(); reveal();
+    clock(); calendar(); growth(); passive(); renderCoupons(); var tg = document.getElementById("cpl-tg"); if (tg) tg.onclick = function () { cplOpen = !cplOpen; if (cplOpen) cplYear = 2026; renderCoupons(); }; reveal();
     var f = document.getElementById("b-fab"); if (f) f.onclick = function () { openReview("new"); };
     var st = document.getElementById("b-set"); if (st) st.onclick = openSettings;
     var o = document.getElementById("b-out"); if (o) o.onclick = function () { go("login"); };
