@@ -22,7 +22,7 @@
 * { box-sizing: border-box; }
 html, body { background: var(--bg); }
 body { color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; margin: 0; padding: 0 clamp(16px, 4vw, 40px) 140px; -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 1440px; margin: 0 auto; }
+.wrap { max-width: 1024px; margin: 0 auto; }
 button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
 input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
@@ -34,7 +34,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* панель макета */
 .pv { border-bottom: 1px solid var(--line); margin: 0 calc(-1 * clamp(16px, 4vw, 40px)); padding: 10px clamp(16px, 4vw, 40px); background: var(--paper); }
-.pv > div { max-width: 1440px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.pv > div { max-width: 1024px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 .pv p { margin: 0; font-size: 13px; color: var(--ink-2); min-width: 0; }
 .pv .hint { flex-basis: 100%; }
 .pv .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -239,7 +239,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 .tgl input { accent-color: #222222; width: 18px; height: 18px; flex: none; }
 .tgl span { min-width: 0; }
 .savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--bg); border-top: 1px solid var(--line); padding: 12px clamp(16px, 4vw, 40px) calc(12px + env(safe-area-inset-bottom, 0px)); }
-.savebar > div { max-width: 1440px; margin: 0 auto; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.savebar > div { max-width: 1024px; margin: 0 auto; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
 .savebar .err { margin-right: auto; }
 .toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 40; max-width: calc(100% - 32px); }
 ::selection { background: var(--accent); color: var(--on-accent); }
@@ -317,13 +317,13 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     { who: 1, per: 1147, every: 1, day: 24 },
     { who: 0, per: 3690, months: [10, 4], day: 18 }
   ];
-  var MILESTONES0 = [1000000, 2500000, 10000000, 25000000, 50000000, 100000000, 200000000];
+  var MILESTONES0 = [10000000, 25000000, 50000000, 100000000, 200000000];
   var BLOCK_NAMES = ["Заголовок", "Стоимость портфеля", "Прогресс к цели", "Вехи", "Календарь взносов", "Рост портфеля", "Купонный календарь", "Аллокация", "Цитата"];
 
   var cfg = {
     title: "Моя стройка фундамента",
-    sub: "Каждый месяц кирпич к кирпичу",
-    quote: "Богатство строится не рывком, а привычкой.",
+    sub: "Строю надёжно. Строю по плану. Без спешки.",
+    quote: "«Большие стены складываются из маленьких кирпичей, если класть их регулярно»",
     goal: 300000000,
     rate: 14, infl: 6.5,
     strategyOn: true,
@@ -423,7 +423,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       h += "</div>";
     }
     var tot = couponTotal();
-    h += '<p class="coupons num">Получено купонов по отчётам: ' + money(tot) + ". Будущие выплаты не считаются: в отчётах ВТБ их нет.</p>";
+    h += '<p class="coupons num">Получено купонов по отчётам: ' + money(tot) + "</p>";
     box.innerHTML = h;
     tg.textContent = cplOpen ? "Свернуть" : "Весь календарь"; tg.setAttribute("aria-expanded", cplOpen ? "true" : "false");
     var pv = document.getElementById("cpl-prev"), nx = document.getElementById("cpl-next");
@@ -451,7 +451,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
         "<div><dt>Прибыль</dt><dd><b class=\"num\">" + money(c.profit, true) + "</b><i>" + pct(c.ppct) + "</i></dd></div>" +
         "<div><dt>Получено вычетов</dt><dd><b class=\"num\">" + money(c.ded) + "</b></dd></div>" +
         "<div><dt>Годовая доходность</dt><dd><b class=\"num\">" + xr + "</b>" + cmp + "</dd></div>" +
-        '</dl><p class="coupons">Купоны и вычеты входят в прибыль. Вклад ' + pct(cfg.rate) + ", инфляция " + pct(cfg.infl) + ".</p></section>";
+        '</dl></section>';
     }
     if (v[2]) {
       var gp = Math.min(100, c.value / cfg.goal * 100);
@@ -491,7 +491,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       h += '<div class="arow"><div class="a-top"><span class="a-name">' + esc(k.name) + '</span><span class="a-pct num">' + pct(share) + "<small>" + money(s) + '</small></span></div><div class="a-track"><i data-w="' + share + '"></i><u style="left:' + k.pct + '%"></u></div><div class="a-sub"><span>В стратегии <b class="num">' + pct(k.pct, 0) + '</b></span><span>Отклонение <b class="num">' + pp(dev) + "</b></span></div></div>";
     });
     h += '<div class="arow"><div class="a-top"><span class="a-name">Деньги на счёте</span><span class="a-pct num">' + money(c.last.cash) + "<small>" + pct(c.last.cash / c.value * 100) + " портфеля</small></span></div></div>";
-    return h + '<p class="anote">По рыночной стоимости на ' + dmy(c.last.d) + ". Доли классов считаются от суммы позиций без денег и в сумме дают 100%.</p>";
+    return h + '<p class="anote">По рыночной стоимости на ' + dmy(c.last.d) + "</p>";
   }
 
   /* ---------- календарь, карточка месяца ---------- */
@@ -513,7 +513,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       }
     });
     h += "</div>";
-    h += '<p class="cap">' + (selMonth ? "" : "Нажмите на закрашенный месяц, чтобы увидеть снимок.") + "</p>";
+    h += '<p class="cap"></p>';
     if (selMonth) h += card(by[selMonth]);
     el.innerHTML = h;
     el.querySelectorAll("[data-m]").forEach(function (b) { b.onclick = function () { selMonth = selMonth === b.dataset.m ? null : b.dataset.m; delAsk = false; calendar(); }; });
@@ -626,9 +626,9 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   function openUpload() {
     var h = '<div class="ov" id="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="Загрузка отчёта">' +
       '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2>Загрузите отчёт</h2><button class="ibtn" type="button" id="up-x" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
-      '<p class="sum">Отчёт ВТБ «Аналитика портфеля» за один месяц: с 1-го числа по последнее, для текущего месяца по сегодня. Файл читается в браузере и на сервер не отправляется.</p>' +
+      '<p class="sum">Отчёт ВТБ за один календарный месяц: с 1-го числа по последнее, для текущего месяца по сегодня. Файл читается в браузере и на сервер не отправляется.</p>' +
       '<label class="drop" id="drop" for="up-file"><b>Перетащите файл или выберите</b><span class="note">PDF отчёта или таблица .xlsx по шаблону</span><span class="btn fill" role="button">Выбрать файл</span><input id="up-file" type="file" accept=".pdf,.xlsx" hidden></label>' +
-      '<div class="grp"><h3>Если формат PDF изменился</h3><p class="note" style="margin:0">Заполните таблицу по шаблону (можно через ИИ по тексту отчёта) и загрузите её здесь. Шаблон проверяет суммы и даты при вводе.</p>' +
+      '<div class="grp"><h3>Если формат PDF изменился</h3><p class="note" style="margin:0">Загрузите таблицу по шаблону.</p>' +
       '<button class="btn" type="button" id="up-tpl" style="justify-self:start">Скачать шаблон таблицы (.xlsx)</button></div></div></div>';
     document.getElementById("layer").innerHTML = h;
     function pick() { document.getElementById("layer").innerHTML = ""; toast("Макет не читает файлы: показан пример разбора"); openReview("new"); }
@@ -658,14 +658,14 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (!periodBad && r.ps.slice(8) !== "01") warns.push("Период начинается не с 1-го числа: пополнения до начала периода в отчёте не видны.");
     var h = '<div class="ov" id="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="Проверка отчёта">';
     h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2>Проверьте отчёт</h2><button class="ibtn" type="button" id="rv-x" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
-    h += '<span class="mode">' + (r.mode === "new" ? "Отметить месяц · снимка за этот месяц нет" : "Актуализировать данные · снимок за этот месяц уже есть") + "</span>";
+    h += '<span class="mode">' + (r.mode === "new" ? "Отметить месяц" : "Актуализировать данные") + "</span>";
     h += '<div class="grid2"><div class="fld"><label>Месяц снимка</label><div class="inp" style="display:flex;align-items:center">' + (periodBad ? "—" : mlabel(r.month)) + '</div></div><div class="fld"><label>Дата снимка</label><div class="inp num" style="display:flex;align-items:center">' + dmy(r.pe) + "</div></div></div>";
-    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + ". Дата формирования файла " + dmy(r.gen) + " не используется.</div>";
+    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + "</div>";
     h += '<div class="grid2"><div class="fld"><label for="rv-v">Стоимость, ₽</label><input class="inp num" id="rv-v" inputmode="decimal" value="' + (r.value / 100).toFixed(2).replace(".", ",") + '"></div><div class="fld"><label for="rv-c">Деньги, ₽</label><input class="inp num" id="rv-c" inputmode="decimal" value="' + (r.cash / 100).toFixed(2).replace(".", ",") + '"></div></div>';
-    h += '<div class="grp"><h3>Взнос месяца</h3><div class="calc"><div><span>Пополнения в отчёте</span><span class="num">' + money(r.dep) + "</span></div><div><span>Взнос месяца</span><b class=\"num\">" + money(contribVal) + '</b></div><div><span class="note" style="flex:1 1 100%">' + esc(c.rule) + "</span></div></div>";
+    h += '<div class="grp"><h3>Взнос месяца</h3><div class="calc"><div><span>Пополнения в отчёте</span><span class="num">' + money(r.dep) + "</span></div><div><span>Взнос месяца</span><b class=\"num\">" + money(contribVal) + '</b></div></div>';
     h += '<div class="grid2"><div class="fld"><label for="rv-mc">Взнос вручную, ₽</label><input class="inp num" id="rv-mc" inputmode="decimal" placeholder="авто" value="' + (r.manualContrib != null ? (r.manualContrib / 100).toFixed(2).replace(".", ",") : "") + '"></div><div class="fld"><label for="rv-d">Из них налоговый вычет, ₽</label><input class="inp num" id="rv-d" inputmode="decimal" value="' + (d / 100).toFixed(2).replace(".", ",") + '"></div></div>';
-    h += '<div class="fld"><label for="rv-fd">Дата взноса (для расчёта доходности)</label><input class="inp num" id="rv-fd" value="' + dmy(r.fd) + '"><div class="hint">По умолчанию середина периода. Исправьте, если помните дату.</div></div>';
-    h += '<div class="sum">Во «вложено своих» войдёт <b class="num">' + money(Math.max(0, contribVal - d)) + "</b>. Вычет попадёт в прибыль.</div></div>";
+    h += '<div class="fld"><label for="rv-fd">Дата взноса</label><input class="inp num" id="rv-fd" value="' + dmy(r.fd) + '"></div>';
+    h += '<div class="sum">Во «вложено своих» войдёт <b class="num">' + money(Math.max(0, contribVal - d)) + "</b></div></div>";
     h += '<div class="grp"><h3>Позиции</h3>';
     r.pos.forEach(function (p, i) {
       h += '<div class="pos"><div class="pos-h"><b>' + esc(p.n) + '</b><span class="num">' + p.q + " шт. · " + money(p.v) + '</span></div><div class="pos-f"><div class="fld"><label for="rv-k' + i + '">Класс</label><select class="inp sm" id="rv-k' + i + '" data-k="' + i + '">' +
@@ -673,7 +673,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
         '' + "</div></div>";
     });
     h += "</div>";
-    h += '<div class="grp"><h3>Новые купоны</h3>' + r.coupons.map(function (x) { return '<div class="ok">' + esc(x) + "</div>"; }).join("") + '<div class="hint">Дубли отсекаются по названию, дате и сумме.</div></div>';
+    h += '<div class="grp"><h3>Новые купоны</h3>' + r.coupons.map(function (x) { return '<div class="ok">' + esc(x) + "</div>"; }).join("") + (r.coupons.length ? "" : '<div class="ok">Новых купонов нет</div>') + "</div>";
     h += '<div class="grp"><h3>Проверки</h3>';
     h += '<div class="ok">✓ Документ «Аналитика портфеля» ВТБ</div>';
     h += Math.abs(diff) <= 100 ? '<div class="ok">✓ Позиции + деньги = стоимость (допуск ±1 ₽)</div>' : "";
@@ -682,7 +682,6 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     warns.forEach(function (e) { h += '<div class="warn">' + esc(e) + "</div>"; });
     h += "</div>";
     h += '<div class="acts"><button class="btn fill" type="button" id="rv-save"' + (errors.length ? " disabled" : "") + '>Сохранить</button><button class="btn ghost" type="button" id="rv-cancel">Отмена</button></div>';
-    if (errors.length) h += '<div class="hint">Пока есть ошибка, сохранить нельзя.</div>';
     h += "</div></div>";
     var layer = document.getElementById("layer"), keepScroll = layer.querySelector(".sheet");
     var st = keepScroll ? keepScroll.scrollTop : 0;
@@ -715,7 +714,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   function openSettings() { go("set", function () { draft = JSON.parse(JSON.stringify(cfg)); }); }
   function settingsView() {
     var d = draft, sum = d.classes.reduce(function (a, c) { return a + (+c.pct || 0); }, 0);
-    var h = '<div class="set"><header class="top"><div class="meta"><span>Настройки</span></div></header><div class="hero"><h1>Настройки</h1><p>Пока не нажато «Сохранить», ничего не меняется.</p></div>';
+    var h = '<div class="set"><header class="top"><div class="meta"><span>Настройки</span></div></header><div class="hero"><h1>Настройки</h1></div>';
     h += sec("Тексты", '<div class="mini"><div class="fld"><label for="s-t">Заголовок</label><input class="inp" id="s-t" value="' + esc(d.title) + '"></div><div class="fld"><label for="s-s">Подзаголовок</label><input class="inp" id="s-s" value="' + esc(d.sub) + '"></div><div class="fld"><label for="s-q">Цитата</label><textarea class="inp" id="s-q" style="height:auto;min-height:80px;padding:12px 14px">' + esc(d.quote) + "</textarea></div></div>");
     h += sec("Цель", '<div class="mini"><div class="fld"><label for="s-g">Сумма цели, ₽</label><input class="inp num" id="s-g" inputmode="numeric" value="' + Math.round(d.goal / 100) + '"></div><div class="grid2"><div class="fld"><label for="s-r">Ставка вклада, % годовых</label><input class="inp num" id="s-r" inputmode="decimal" value="' + String(d.rate).replace(".", ",") + '"></div><div class="fld"><label for="s-i">Инфляция, % годовых</label><input class="inp num" id="s-i" inputmode="decimal" value="' + String(d.infl).replace(".", ",") + '"></div></div></div>');
     h += sec("Вехи", '<div class="mini">' + d.milestones.slice().sort(function (a, b) { return a - b; }).map(function (m) { return '<div class="rowm"><div class="inp num" style="display:flex;align-items:center">' + rub0(m) + '</div><button type="button" class="danger" data-delm="' + m + '">Удалить</button></div>'; }).join("") + '<div class="rowm"><input class="inp num" id="s-nm" inputmode="numeric" placeholder="Новая веха, ₽"><button type="button" class="btn sm" id="s-addm">Добавить</button></div></div>');
