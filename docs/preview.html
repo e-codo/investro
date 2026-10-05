@@ -22,7 +22,7 @@
 * { box-sizing: border-box; }
 html, body { background: var(--bg); }
 body { color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; margin: 0; padding: 0 clamp(16px, 4vw, 40px) 140px; -webkit-font-smoothing: antialiased; }
-.wrap { max-width: 1040px; margin: 0 auto; }
+.wrap { max-width: 1440px; margin: 0 auto; }
 button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
 input, select, textarea { font: inherit; color: inherit; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
@@ -32,7 +32,7 @@ input, select, textarea { font: inherit; color: inherit; }
 
 /* панель макета */
 .pv { border-bottom: 1px solid var(--line); margin: 0 calc(-1 * clamp(16px, 4vw, 40px)); padding: 10px clamp(16px, 4vw, 40px); background: var(--paper); }
-.pv > div { max-width: 1040px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.pv > div { max-width: 1440px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 .pv p { margin: 0; font-size: 13px; color: var(--ink-2); min-width: 0; }
 .pv .hint { flex-basis: 100%; }
 .pv .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
@@ -62,7 +62,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .kv dd { margin: 4px 0 0; }
 .kv b { display: block; font-size: clamp(22px, 6vw, 38px); font-weight: 500; letter-spacing: -.02em; line-height: 1.1; overflow-wrap: anywhere; }
 .kv i { font-style: normal; font-size: 13px; color: var(--ink-2); }
-@media (min-width: 720px) { .kv { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 1000px) { .kv { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .coupons { margin-top: 18px; font-size: 13px; color: var(--ink-2); }
 
 /* прогресс */
@@ -138,7 +138,10 @@ svg.chart text { font-family: var(--font); fill: var(--ink-3); }
 .pass { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-bottom: 28px; }
 .pass b { display: block; font-size: clamp(30px, 7vw, 56px); font-weight: 500; letter-spacing: -.03em; line-height: 1.05; overflow-wrap: anywhere; }
 .pass i { font-style: normal; font-size: 13px; color: var(--ink-2); }
-.cpl { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.cplw { container-type: inline-size; }
+.cpl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@container (min-width: 520px) { .cpl { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@container (min-width: 940px) { .cpl { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
 .cpl > div { border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 4px; align-content: start; min-width: 0; }
 .cpl > div.past { background: var(--tint); border-color: transparent; }
 .cpl .m { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); display: flex; justify-content: space-between; gap: 6px; }
@@ -230,7 +233,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 .tgl input { accent-color: #222222; width: 18px; height: 18px; flex: none; }
 .tgl span { min-width: 0; }
 .savebar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; background: var(--bg); border-top: 1px solid var(--line); padding: 12px clamp(16px, 4vw, 40px) calc(12px + env(safe-area-inset-bottom, 0px)); }
-.savebar > div { max-width: 1040px; margin: 0 auto; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
+.savebar > div { max-width: 1440px; margin: 0 auto; display: flex; gap: 8px; justify-content: flex-end; align-items: center; flex-wrap: wrap; }
 .savebar .err { margin-right: auto; }
 .toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 12px; font-size: 14px; z-index: 40; max-width: calc(100% - 32px); }
 ::selection { background: var(--accent); color: var(--on-accent); }
@@ -239,7 +242,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
 <div class="pv">
   <div>
-    <p><b>Макет.</b> Август и сентябрь — ваши реальные месячные отчёты, октябрь загрузите кнопкой «+» (сохраняется до перезагрузки). График будущих купонов условный. Расчёты настоящие по формулам ТЗ. Вход: demo@mail.ru и пароль 12345678.</p>
+    <p><b>Макет.</b> Август и сентябрь — ваши реальные месячные отчёты, октябрь загрузите кнопкой «+» (сохраняется до перезагрузки). Будущие купоны и пассивный доход в продукт не входят. Расчёты настоящие по формулам ТЗ. Вход: demo@mail.ru и пароль 12345678.</p>
     <div class="row">
       <div class="seg" role="group" aria-label="Экран">
         <button type="button" id="v-login" aria-pressed="false">Вход</button>
@@ -309,7 +312,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     { who: 0, per: 3690, months: [10, 4], day: 18 }
   ];
   var MILESTONES0 = [1000000, 2500000, 10000000, 25000000, 50000000, 100000000, 200000000];
-  var BLOCK_NAMES = ["Заголовок", "Стоимость портфеля", "Прогресс к цели", "Вехи", "Календарь взносов", "Рост портфеля", "Пассивный доход", "Купонный календарь", "Аллокация", "Цитата"];
+  var BLOCK_NAMES = ["Заголовок", "Стоимость портфеля", "Прогресс к цели", "Вехи", "Календарь взносов", "Рост портфеля", "Купонный календарь", "Аллокация", "Цитата"];
 
   var cfg = {
     title: "Моя стройка фундамента",
@@ -321,7 +324,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     classes: [{ id: "bond", name: "Облигации", pct: 60 }, { id: "eq", name: "Акции", pct: 20 }, { id: "liq", name: "Ликвидность", pct: 20 }],
     stratName: "",
     milestones: MILESTONES0.slice(),
-    vis: [true, true, true, true, true, true, true, true, true, true]
+    vis: [true, true, true, true, true, true, true, true, true]
   };
   var draft = null;
   var view = "dash";
@@ -384,24 +387,19 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   /* купонный календарь: 3 прошедших, текущий и 11 вперёд */
   function qty(n) { var p = POS.filter(function (x) { return x.n === n; })[0]; return p ? p.q : 0; }
   var CUR_IDX = 9; /* октябрь 2026: индекс месяца от января 2026 */
+  /* Только факт из отчётов. Будущих выплат календарь не считает. */
   function couponMonth(y, m) {
-    var key = monthKey(y, m), ahead = (y - 2026) * 12 + (m - 1) - CUR_IDX, items = [], sum = 0, kind;
-    if (ahead < 0) {
-      kind = key >= S[0].m ? "past" : "none";
-      sum = FACT[key] || 0; if (sum) items.push({ n: "РЖД 1Р-44R", a: false });
-    } else if (ahead <= 11) {
-      kind = ahead === 0 ? "now" : "future";
-      var kB = qty("РЖД 1Р-44R") * SCHED[0].per; sum += kB; items.push({ n: "РЖД 1Р-44R", a: true });
-      if (SCHED[1].months.indexOf(m - 1) > -1) { sum += qty("ОФЗ 26245") * SCHED[1].per; items.push({ n: "ОФЗ 26245", a: false }); }
-    } else kind = "far";
+    var key = monthKey(y, m), ahead = (y - 2026) * 12 + (m - 1) - CUR_IDX, items = [], sum = FACT[key] || 0, kind;
+    if (sum) items.push({ n: "РЖД 1Р-44R" });
+    if (ahead > 0) kind = "future"; else if (ahead === 0) kind = "now"; else kind = key >= S[0].m ? "past" : "none";
     return { key: key, y: y, m: m, kind: kind, sum: sum, items: items };
   }
-  function couponTotal() { var t = 0, i; for (i = 0; i < 12; i++) { var m = (CUR_IDX + i) % 12 + 1, y = 2026 + Math.floor((CUR_IDX + i) / 12); t += couponMonth(y, m).sum; } return t; }
+  function couponTotal() { var t = 0; for (var k in FACT) t += FACT[k]; return t; }
   var cplOpen = false, cplYear = 2026;
   function cplCard(x, i) {
-    var cls = x.kind === "past" ? "past" : x.kind === "now" ? "now" : x.kind === "none" || x.kind === "far" ? "off" : "";
-    var tag = x.kind === "past" ? "факт" : x.kind === "now" ? "сейчас" : x.kind === "future" ? "прогноз" : "";
-    var note = x.items.map(function (it) { return esc(it.n) + (it.a ? " ≈" : ""); }).join(", ") || (x.kind === "none" ? "нет отчёта" : x.kind === "far" ? "вне прогноза" : "нет выплат");
+    var cls = x.kind === "past" ? "past" : x.kind === "now" ? "now" : "off";
+    var tag = x.kind === "past" ? "факт" : x.kind === "now" ? "сейчас" : "";
+    var note = x.items.map(function (it) { return esc(it.n); }).join(", ") || (x.kind === "none" ? "нет отчёта" : x.kind === "future" ? "ещё не наступил" : "нет выплат");
     return '<div style="--d:' + (i * 40) + 'ms" class="' + cls + '"><span class="m"><span>' + MONTHS[x.m - 1] + " " + String(x.y).slice(2) + "</span><span>" + tag + '</span></span><b class="num">' + (x.sum ? money(x.sum) : "—") + "</b><small>" + note + "</small></div>";
   }
   function renderCoupons() {
@@ -417,7 +415,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       h += "</div>";
     }
     var tot = couponTotal();
-    h += '<p class="coupons num">Итого за 12 мес. (текущий и 11 вперёд): ' + money(tot) + ", в среднем " + money(Math.round(tot / 12)) + " в месяц. Знак ≈ у флоатера: показан последний известный купон.</p>";
+    h += '<p class="coupons num">Получено купонов по отчётам: ' + money(tot) + ". Будущие выплаты не считаются: в отчётах ВТБ их нет.</p>";
     box.innerHTML = h;
     tg.textContent = cplOpen ? "Свернуть" : "Весь календарь"; tg.setAttribute("aria-expanded", cplOpen ? "true" : "false");
     var pv = document.getElementById("cpl-prev"), nx = document.getElementById("cpl-next");
@@ -454,13 +452,9 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (v[3]) h += sec("Вехи", milestones(c));
     if (v[4]) h += sec("Календарь взносов", '<div id="cal"></div>', '<span class="lbl" id="streak">' + streak() + " мес. подряд без пропусков</span>");
     if (v[5]) h += sec("Рост портфеля", '<div class="legend" style="margin-bottom:14px"><span><i style="background:var(--mid)"></i>Вложено своих</span><span><i style="background:var(--ink)"></i>Стоимость</span><span>Над парой — прибыль</span></div><div class="readout" id="ro"></div><div id="growth"></div>');
-    var hasBonds = POS.some(function (p) { return p.t === "bond"; });
-    if (v[6] && hasBonds) {
-      h += sec("Пассивный доход", '<div class="pass"><div><span class="lbl">В месяц сейчас</span><b class="num" data-count data-v="' + c.last.passive + '">' + money(c.last.passive) + '</b></div><div><span class="lbl">Прирост за 12 мес.</span><b class="num">—</b><i>нужен снимок годичной давности</i></div></div><div id="passive"></div>');
-    }
-    if (v[7]) h += sec("Купонный календарь", '<div id="cpl-box"></div>', '<button class="linkbtn" type="button" id="cpl-tg" aria-expanded="false" aria-controls="cpl-box">Весь календарь</button>');
-    if (v[8] && cfg.strategyOn) h += sec("Аллокация", alloc(c));
-    if (v[9]) h += sec("Цитата", '<p class="quote">' + esc(cfg.quote) + "</p>");
+    if (v[6]) h += sec("Купонный календарь", '<div class="cplw" id="cpl-box"></div>', '<button class="linkbtn" type="button" id="cpl-tg" aria-expanded="false" aria-controls="cpl-box">Весь календарь</button>');
+    if (v[7] && cfg.strategyOn) h += sec("Аллокация", alloc(c));
+    if (v[8]) h += sec("Цитата", '<p class="quote">' + esc(cfg.quote) + "</p>");
     h += '<button class="fab" type="button" id="b-fab" aria-label="Загрузить отчёт">' + ICON.plus + "<span>Загрузить отчёт</span></button>";
     return h;
   }
@@ -522,7 +516,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   }
   function card(s) {
     var rows = (POSBY[s.m] || []).map(function (p) { return "<li><span>" + esc(p.n) + '</span><span class="num">' + p.q + " шт. · " + money(p.v) + "</span></li>"; }).join("");
-    var cp = FACT[s.m] ? money(FACT[s.m]) : s.m === S[S.length - 1].m && s.m === curM ? "194,99 ₽ (прогноз на 24.10)" : "нет";
+    var cp = FACT[s.m] ? money(FACT[s.m]) : "нет";
     var confirm = delAsk ?
       '<div class="warn">Удалить снимок за ' + mlabel(s.m) + '? Взнос следующего месяца пересчитается относительно предыдущего снимка, ручная правка там сбросится.</div><div class="acts"><button type="button" class="btn fill" data-delyes>Да, удалить</button><button type="button" class="btn ghost" data-delno>Отмена</button></div>' :
       '<div class="acts"><button type="button" class="btn" data-replace>Заменить отчёт</button><button type="button" class="danger" data-del>Удалить снимок</button></div>';
@@ -542,7 +536,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     var cum = 0, cums = S.map(function (s) { cum += net(s) - s.wd; return cum; });
     var W = Math.max(280, el.clientWidth || 640), H = W < 480 ? 220 : 280, top = 28, bot = 26;
     var max = Math.max.apply(null, part.map(function (s) { return s.value; })) * 1.04;
-    var gw = (W - 4) / part.length, bw = Math.min(26, gw * 0.34), sy = (H - top - bot) / max;
+    var gw = (W - 4) / part.length, bw = Math.min(48, gw * 0.34), sy = (H - top - bot) / max;
     var svg = '<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Рост портфеля по месяцам">';
     for (var g = 1; g <= 3; g++) { var gy = H - bot - (H - top - bot) * g / 3; svg += '<line x1="0" x2="' + W + '" y1="' + gy + '" y2="' + gy + '" stroke="rgba(34,34,34,.1)"/>'; }
     part.forEach(function (s, i) {
@@ -647,7 +641,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     r.pos.forEach(function (p, i) {
       h += '<div class="pos"><div class="pos-h"><b>' + esc(p.n) + '</b><span class="num">' + p.q + " шт. · " + money(p.v) + '</span></div><div class="pos-f"><div class="fld"><label for="rv-k' + i + '">Класс</label><select class="inp sm" id="rv-k' + i + '" data-k="' + i + '">' +
         cfg.classes.map(function (k) { return '<option value="' + k.id + '"' + (k.id === p.c ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>" +
-        (p.t === "bond" ? '<div class="fld"><label for="rv-s' + i + '">SECID</label><input class="inp sm" id="rv-s' + i + '" value="' + esc(p.secid) + '" placeholder="подтвердите SECID"></div>' : '<div class="fld"><label>SECID</label><div class="hint" style="padding-top:10px">только для облигаций</div></div>') + "</div></div>";
+        '' + "</div></div>";
     });
     h += "</div>";
     h += '<div class="grp"><h3>Новые купоны</h3>' + r.coupons.map(function (x) { return '<div class="ok">' + esc(x) + "</div>"; }).join("") + '<div class="hint">Дубли отсекаются по названию, дате и сумме.</div></div>';
@@ -699,7 +693,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     h += sec("Стратегия", '<div class="mini"><label class="tgl"><input type="checkbox" id="s-on"' + (d.strategyOn ? " checked" : "") + '><span>Использовать стратегию и блок «Аллокация»</span></label>' +
       d.classes.map(function (c, i) { return '<div class="rowx"><input class="inp" data-cn="' + i + '" aria-label="Название класса" value="' + esc(c.name) + '"><input class="inp num" data-cp="' + i + '" aria-label="Доля, %" inputmode="numeric" value="' + c.pct + '"><button type="button" class="danger" data-delc="' + i + '"' + (d.classes.length <= 1 ? " disabled" : "") + ">Удалить</button></div>"; }).join("") +
       '<div class="sum">Сумма долей: <b class="num">' + sum + '%</b>' + (sum === 100 ? "" : " (нужно ровно 100%)") + '</div><button type="button" class="linkbtn" id="s-addc"' + (d.classes.length >= 5 ? " disabled" : "") + '>Добавить класс (до 5)</button><div class="fld"><label for="s-sn">Имя стратегии</label><input class="inp" id="s-sn" placeholder="' + d.classes.map(function (c) { return c.pct; }).join(" / ") + '" value="' + esc(d.stratName) + '"></div></div>');
-    h += sec("Бумаги", '<div class="mini">' + INSTR.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.secid ? "SECID " + esc(p.secid) : p.t === "bond" ? "SECID не подтверждён" : "SECID не нужен") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
+    h += sec("Бумаги", '<div class="mini">' + INSTR.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.t === "bond" ? "облигация" : "фонд") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
     h += sec("Блоки главного экрана", '<div class="mini">' + BLOCK_NAMES.map(function (n, i) { return '<label class="tgl"><input type="checkbox" data-b="' + i + '"' + (d.vis[i] ? " checked" : "") + "><span>" + (i + 1) + ". " + n + "</span></label>"; }).join("") + "</div>");
     h += sec("Данные", '<div class="mini">' + S.slice().reverse().map(function (s) { return '<div class="rowm"><span class="num">' + mlabel(s.m) + " · " + money(s.value) + '</span><button type="button" class="danger" data-dels="' + s.m + '">Удалить</button></div>'; }).join("") + '<button type="button" class="linkbtn" id="s-all">Удалить все данные</button><div id="s-allbox"></div></div>');
     h += "</div>";
