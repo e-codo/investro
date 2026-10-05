@@ -34,6 +34,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .pv { border-bottom: 1px solid var(--line); margin: 0 calc(-1 * clamp(16px, 4vw, 40px)); padding: 10px clamp(16px, 4vw, 40px); background: var(--paper); }
 .pv > div { max-width: 1040px; margin: 0 auto; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 .pv p { margin: 0; font-size: 13px; color: var(--ink-2); min-width: 0; }
+.pv .hint { flex-basis: 100%; }
 .pv .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 
 /* шапка */
@@ -82,6 +83,9 @@ input, select, textarea { font: inherit; color: inherit; }
 .bar-grow { transform-box: fill-box; transform-origin: 50% 100%; animation: grow .9s cubic-bezier(.22, .8, .24, 1) both; animation-delay: var(--d, 0ms); }
 @keyframes grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 .bar-fade { animation: fadein .5s ease both; animation-delay: var(--d, 0ms); }
+/* Анимации стартуют, когда блок появился на экране: до этого всё на паузе в начальном кадре. */
+[data-reveal]:not(.in) * { animation-play-state: paused !important; }
+.cpl > div { animation: pop .55s cubic-bezier(.22, .8, .24, 1) both; animation-delay: var(--d, 0ms); }
 @keyframes fadein { from { opacity: 0; } to { opacity: 1; } }
 
 /* календарь взносов */
@@ -201,6 +205,26 @@ select.inp { appearance: auto; }
 .seg button:not([aria-pressed="true"]):hover { background: var(--tint); color: var(--ink); }
 .linkbtn { font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
 
+/* вход (из e-codo/invest без изменений) */
+.login { min-height: 100dvh; display: grid; align-content: center; grid-template-columns: minmax(0, 1fr); gap: 28px; max-width: 380px; margin: 0 auto; padding: 40px 0; }
+.logo { display: block; width: 72px; height: 72px; color: var(--ink); margin: 0 auto 24px; }
+.login > div { text-align: center; }
+.login p { margin: 0; color: var(--ink-2); }
+.login form { display: grid; gap: 14px; }
+.login .btn { height: 52px; font-size: 16px; }
+body.is-login .login { min-height: calc(100dvh - 58px); }
+.login .err { border: 0; }
+
+/* экран ожидания между страницами: тёмный экран, логотипы плавно едут по горизонтали */
+.wait { position: fixed; inset: 0; z-index: 60; background: var(--ink); color: var(--paper); display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s .22s; }
+.wait.on { opacity: 1; visibility: visible; transition: opacity .22s ease; }
+.wait .lane { width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
+.wait .strip { display: flex; width: max-content; animation: lane 6s linear infinite; }
+.wait .set { display: flex; gap: 56px; padding-right: 56px; }
+.wait svg { width: 64px; height: 64px; flex: none; color: var(--paper); }
+@keyframes lane { to { transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .wait .set + .set { display: none; } .wait .set svg:not(:first-child) { display: none; } .wait .set { padding-right: 0; } .wait .strip { margin: 0 auto; } }
+
 /* настройки */
 .set .hero { margin-top: 40px; }
 .mini { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
@@ -220,9 +244,10 @@ select.inp { appearance: auto; }
 
 <div class="pv">
   <div>
-    <p><b>Макет.</b> Пример данных, расчёты настоящие по формулам ТЗ. Ничего не сохраняется.</p>
+    <p><b>Макет.</b> Пример данных, расчёты настоящие по формулам ТЗ. Ничего не сохраняется. Вход в макете: demo@mail.ru и пароль 12345678.</p>
     <div class="row">
       <div class="seg" role="group" aria-label="Экран">
+        <button type="button" id="v-login" aria-pressed="false">Вход</button>
         <button type="button" id="v-dash" aria-pressed="true">Главный экран</button>
         <button type="button" id="v-set" aria-pressed="false">Настройки</button>
       </div>
@@ -238,6 +263,7 @@ select.inp { appearance: auto; }
 <div class="wrap" id="app"></div>
 <div id="layer"></div>
 <div id="toast"></div>
+<div class="wait" id="wait" role="status" aria-label="Загрузка"></div>
 
 <script>
 (function () {
@@ -294,6 +320,8 @@ select.inp { appearance: auto; }
   };
   var draft = null;
   var view = "dash";
+  var loginMode = "in", loginState = null, failures = 0, regs = 0, busy = false, io = null;
+  var LOGO = '<svg class="logo" role="img" aria-label="Моя стройка фундамента" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g fill="currentColor"><path d="m12 0a12 12 0 1 0 12 12 12 12 0 0 0 -12-12zm0 23a11 11 0 1 1 11-11 11.0125 11.0125 0 0 1 -11 11z"/><path d="m17.0518 5.1836a19.12 19.12 0 0 0 -10.0948-.0029 2.5489 2.5489 0 0 0 -1.7734 1.7675 18.8322 18.8322 0 0 0 -.1429 9.5083.4955.4955 0 0 0 .0512.2145c.0312.1237.055.2489.0888.372a2.5489 2.5489 0 0 0 1.7675 1.7734 19.0312 19.0312 0 0 0 5.0518.6836 19.0785 19.0785 0 0 0 5.043-.6807 2.5489 2.5489 0 0 0 1.7734-1.7675 19.0307 19.0307 0 0 0 .6836-5.0518 19.0785 19.0785 0 0 0 -.6807-5.043 2.5489 2.5489 0 0 0 -1.7675-1.7734zm.8 11.6025a1.5386 1.5386 0 0 1 -1.0743 1.0684 18.06 18.06 0 0 1 -9.5634-.0029 1.5386 1.5386 0 0 1 -1.0684-1.0743c-.0159-.0576-.0264-.1164-.0417-.1741l3.896-3.8962 1.6465 1.6465a.5.5 0 0 0 .707 0l3.1465-3.1465v.793a.5.5 0 0 0 1 0v-2a.5019.5019 0 0 0 -.5-.5h-2a.5.5 0 0 0 0 1h.793l-2.793 2.793-1.6465-1.6465a.5.5 0 0 0 -.707 0l-3.8074 3.8074a17.8921 17.8921 0 0 1 .3093-8.24 1.5386 1.5386 0 0 1 1.0743-1.0684 17.9946 17.9946 0 0 1 9.5634.0029 1.5386 1.5386 0 0 1 1.0684 1.0743 18.0168 18.0168 0 0 1 .6455 4.7773 17.9794 17.9794 0 0 1 -.6484 4.7861z"/></g></svg>';
 
   /* ---------- утилиты ---------- */
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
@@ -368,7 +396,7 @@ select.inp { appearance: auto; }
 
   /* ---------- главный экран ---------- */
   function sec(h, body, right) {
-    return '<section class="sec"><div class="sec-h"><span class="lbl">' + h + "</span>" + (right || "") + "</div>" + body + "</section>";
+    return '<section class="sec" data-reveal><div class="sec-h"><span class="lbl">' + h + "</span>" + (right || "") + "</div>" + body + "</section>";
   }
   function header(c) {
     return '<header class="top"><div class="meta"><span class="num" id="clk">--:--</span><span>' + esc(stratName()) + "</span><span>Отчёт от " + dmy(c.last.d) + "</span></div>" +
@@ -380,7 +408,7 @@ select.inp { appearance: auto; }
     if (v[1]) {
       var xr = c.xirr == null ? "—" : pct(c.xirr);
       var cmp = c.xirr == null ? "" : '<i>' + pp(c.xirr - cfg.rate) + " к вкладу · " + pp(c.xirr - cfg.infl) + " к инфляции</i>";
-      h += '<section class="val"><span class="lbl">Стоимость портфеля</span><div class="big num" id="big" data-v="' + c.value + '">' + money(c.value) + "</div>" +
+      h += '<section class="val" data-reveal><span class="lbl">Стоимость портфеля</span><div class="big num" data-count data-v="' + c.value + '">' + money(c.value) + "</div>" +
         '<dl class="kv">' +
         "<div><dt>Вложено своих</dt><dd><b class=\"num\">" + money(c.own) + "</b></dd></div>" +
         "<div><dt>Прибыль</dt><dd><b class=\"num\">" + money(c.profit, true) + "</b><i>" + pct(c.ppct) + "</i></dd></div>" +
@@ -397,7 +425,7 @@ select.inp { appearance: auto; }
     if (v[5]) h += sec("Рост портфеля", '<div class="legend" style="margin-bottom:14px"><span><i style="background:var(--mid)"></i>Вложено своих</span><span><i style="background:var(--ink)"></i>Стоимость</span><span>Над парой — прибыль</span></div><div class="readout" id="ro"></div><div id="growth"></div>');
     var hasBonds = POS.some(function (p) { return p.t === "bond"; });
     if (v[6] && hasBonds) {
-      h += sec("Пассивный доход", '<div class="pass"><div><span class="lbl">В месяц сейчас</span><b class="num">' + money(c.last.passive) + '</b></div><div><span class="lbl">Прирост за 12 мес.</span><b class="num">—</b><i>нужен снимок годичной давности</i></div></div><div id="passive"></div>');
+      h += sec("Пассивный доход", '<div class="pass"><div><span class="lbl">В месяц сейчас</span><b class="num" data-count data-v="' + c.last.passive + '">' + money(c.last.passive) + '</b></div><div><span class="lbl">Прирост за 12 мес.</span><b class="num">—</b><i>нужен снимок годичной давности</i></div></div><div id="passive"></div>');
     }
     if (v[7]) h += sec("Купонный календарь", couponCal());
     if (v[8] && cfg.strategyOn) h += sec("Аллокация", alloc(c));
@@ -423,11 +451,11 @@ select.inp { appearance: auto; }
     return out;
   }
   function couponCal() {
-    var w = couponWindow(), tot = 0, h = '<div class="cpl">';
+    var w = couponWindow(), tot = 0, idxc = 0, h = '<div class="cpl">';
     w.forEach(function (x) {
       if (!x.past) tot += x.sum;
       var items = x.items.map(function (it) { return esc(it.n) + (it.a ? " ≈" : ""); }).join(", ") || "—";
-      h += '<div class="' + (x.past ? "past" : x.now ? "now" : "") + '"><span class="m"><span>' + MONTHS[x.m - 1] + " " + String(x.y).slice(2) + "</span><span>" + (x.past ? "факт" : x.now ? "сейчас" : "") + "</span></span><b class=\"num\">" + (x.sum ? money(x.sum) : "—") + "</b><small>" + items + "</small></div>";
+      h += '<div style="--d:' + (idxc++ * 40) + 'ms" class="' + (x.past ? "past" : x.now ? "now" : "") + '"><span class="m"><span>' + MONTHS[x.m - 1] + " " + String(x.y).slice(2) + "</span><span>" + (x.past ? "факт" : x.now ? "сейчас" : "") + "</span></span><b class=\"num\">" + (x.sum ? money(x.sum) : "—") + "</b><small>" + items + "</small></div>";
     });
     h += "</div>";
     return h + '<p class="coupons num">Итого за 12 мес. (текущий и 11 вперёд): ' + money(tot) + ", в среднем " + money(Math.round(tot / 12)) + " в месяц. Знак ≈ у флоатера: показан последний известный купон.</p>";
@@ -634,7 +662,7 @@ select.inp { appearance: auto; }
   }
 
   /* ---------- настройки ---------- */
-  function openSettings() { draft = JSON.parse(JSON.stringify(cfg)); view = "set"; render(); window.scrollTo(0, 0); }
+  function openSettings() { go("set", function () { draft = JSON.parse(JSON.stringify(cfg)); }); }
   function settingsView() {
     var d = draft, sum = d.classes.reduce(function (a, c) { return a + (+c.pct || 0); }, 0);
     var h = '<div class="set"><header class="top"><div class="meta"><span>Настройки</span></div></header><div class="hero"><h1>Настройки</h1><p>Пока не нажато «Сохранить», ничего не меняется.</p></div>';
@@ -678,38 +706,107 @@ select.inp { appearance: auto; }
       g.onclick = function () { toast("Макет: данные не удалены"); };
       w.focus();
     };
-    document.getElementById("s-cancel").onclick = function () { draft = null; view = "dash"; render(); };
-    document.getElementById("s-save").onclick = function () { sync(); cfg = JSON.parse(JSON.stringify(d)); draft = null; view = "dash"; render(); toast("Настройки сохранены"); };
+    document.getElementById("s-cancel").onclick = function () { go("dash", function () { draft = null; }); };
+    document.getElementById("s-save").onclick = function () { sync(); var snap = JSON.parse(JSON.stringify(d)); go("dash", function () { cfg = snap; draft = null; toast("Настройки сохранены"); }); };
   }
 
   /* ---------- вывод ---------- */
-  function countUp() {
-    var el = document.getElementById("big"); if (!el) return;
-    var to = +el.dataset.v; if (reduce) return;
-    var t0 = performance.now(), dur = 1000;
+  function countOne(el) {
+    if (reduce) return;
+    var to = +el.dataset.v, t0 = performance.now(), dur = 1000;
     (function step(t) {
-      var p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+      var k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
       el.textContent = money(Math.round(to * e));
-      if (p < 1) requestAnimationFrame(step);
+      if (k < 1 && el.isConnected) requestAnimationFrame(step); else el.textContent = money(to);
     })(t0);
   }
-  function grow() {
-    requestAnimationFrame(function () { requestAnimationFrame(function () { document.querySelectorAll("[data-w]").forEach(function (e) { e.style.width = Math.max(0, Math.min(100, +e.dataset.w)) + "%"; }); }); });
+  /* Блок оживает, когда попал в экран: растут полосы и столбцы, числа бегут от нуля. */
+  function enter(el) {
+    if (el.classList.contains("in")) return;
+    el.classList.add("in");
+    el.querySelectorAll("[data-w]").forEach(function (e) { e.style.width = Math.max(0, Math.min(100, +e.dataset.w)) + "%"; });
+    el.querySelectorAll("[data-count]").forEach(countOne);
+  }
+  function reveal() {
+    if (io) io.disconnect();
+    var els = document.querySelectorAll("[data-reveal]");
+    if (reduce || !("IntersectionObserver" in window)) { els.forEach(enter); return; }
+    io = new IntersectionObserver(function (es) {
+      es.forEach(function (e) { if (e.isIntersecting) { enter(e.target); io.unobserve(e.target); } });
+    }, { threshold: 0.2, rootMargin: "0px 0px -6% 0px" });
+    els.forEach(function (e) { io.observe(e); });
   }
   function clock() { var e = document.getElementById("clk"); if (e) e.textContent = new Date().toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" }); }
   function render() {
     var app = document.getElementById("app");
-    document.getElementById("v-dash").setAttribute("aria-pressed", view === "dash");
-    document.getElementById("v-set").setAttribute("aria-pressed", view === "set");
+    document.body.classList.toggle("is-login", view === "login");
+    ["login", "dash", "set"].forEach(function (v) { document.getElementById("v-" + v).setAttribute("aria-pressed", view === v ? "true" : "false"); });
+    if (view === "login") { app.innerHTML = loginView(); bindLogin(); return; }
     if (view === "set") { app.innerHTML = settingsView(); bindSettings(); return; }
     app.innerHTML = dash();
-    clock(); calendar(); growth(); passive(); countUp(); grow();
+    clock(); calendar(); growth(); passive(); reveal();
     var f = document.getElementById("b-fab"); if (f) f.onclick = function () { openReview("new"); };
-    var s = document.getElementById("b-set"); if (s) s.onclick = openSettings;
-    var o = document.getElementById("b-out"); if (o) o.onclick = function () { toast("Макет: выход не выполняется"); };
+    var st = document.getElementById("b-set"); if (st) st.onclick = openSettings;
+    var o = document.getElementById("b-out"); if (o) o.onclick = function () { go("login"); };
   }
-  document.getElementById("v-dash").onclick = function () { draft = null; view = "dash"; render(); };
-  document.getElementById("v-set").onclick = openSettings;
+
+  /* ---------- переход между страницами с экраном ожидания ---------- */
+  function waitHtml() {
+    var one = '<div class="set">' + new Array(9).join(LOGO.replace(' class="logo"', "").replace(' role="img" aria-label="Моя стройка фундамента"', ' aria-hidden="true"')) + "</div>";
+    return '<div class="lane"><div class="strip">' + one + one + "</div></div>";
+  }
+  function go(next, before) {
+    if (busy) return; busy = true;
+    var w = document.getElementById("wait");
+    w.innerHTML = waitHtml(); w.classList.add("on");
+    if (RV) closeReview();
+    setTimeout(function () {
+      if (before) before();
+      view = next; render(); window.scrollTo(0, 0);
+      setTimeout(function () { w.classList.remove("on"); busy = false; setTimeout(function () { if (!busy) w.innerHTML = ""; }, 300); }, 250);
+    }, 1100);
+  }
+
+  /* ---------- вход и регистрация (логика и тексты как в e-codo/invest) ---------- */
+  var EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+  function loginView() {
+    var up = loginMode === "up", st = loginState || {};
+    return '<main class="login"><div>' + LOGO + "<p>" + (up ? "Создайте аккаунт: только почта и пароль, без подтверждения." : "Войдите, чтобы продолжить.") + "</p></div>" +
+      '<form id="auth" novalidate><div class="fld"><label for="email">Почта</label><input id="email" name="email" class="inp" type="email" autocomplete="email" placeholder="name@mail.ru" value="' + esc(st.email || "") + '" required></div>' +
+      '<div class="fld"><label for="password">Пароль</label><input id="password" name="password" class="inp" type="password" autocomplete="' + (up ? "new-password" : "current-password") + '" required></div>' +
+      (up ? '<p class="sum">Пароль восстановить нельзя. Сохраните его в менеджере паролей.</p>' : "") +
+      (st.error ? '<p id="auth-error" class="err" role="alert">' + esc(st.error) + "</p>" : "") +
+      '<button class="btn fill" type="submit" id="auth-go"' + (st.pending ? " disabled" : "") + ">" + (st.pending ? "Подождите…" : up ? "Создать аккаунт" : "Войти") + "</button>" +
+      '<button class="linkbtn" type="button" id="auth-sw">' + (up ? "У меня уже есть аккаунт" : "Создать аккаунт") + "</button></form></main>";
+  }
+  function bindLogin() {
+    document.getElementById("auth-sw").onclick = function () { loginMode = loginMode === "in" ? "up" : "in"; loginState = null; render(); };
+    document.getElementById("auth").onsubmit = function (e) {
+      e.preventDefault();
+      var email = document.getElementById("email").value.trim().toLowerCase(), pass = document.getElementById("password").value, typed = document.getElementById("email").value;
+      var up = loginMode === "up";
+      loginState = { pending: true, email: typed }; render();
+      setTimeout(function () {
+        var err = null;
+        if (!up) {
+          if (!EMAIL.test(email) || !pass) err = "Введите почту и пароль.";
+          else if (failures >= 5) err = "Слишком много неудачных попыток. Попробуйте через 15 минут.";
+          else if (email !== "demo@mail.ru" || pass !== "12345678") { failures++; err = "Почта или пароль не подошли."; }
+        } else {
+          if (!EMAIL.test(email)) err = "Введите почту в виде name@mail.ru.";
+          else if (pass.length < 8) err = "Пароль не короче 8 символов.";
+          else if (pass.length > 128) err = "Пароль не длиннее 128 символов.";
+          else if (regs >= 5) err = "Слишком много регистраций с этого адреса. Попробуйте через 60 минут.";
+          else { regs++; if (email === "demo@mail.ru") err = "Эта почта уже занята. Войдите или возьмите другую."; }
+        }
+        if (err) { loginState = { error: err, email: typed }; render(); var pw = document.getElementById("password"); if (pw) pw.focus(); return; }
+        loginState = null; failures = 0; busy = false; go("dash");
+      }, 700);
+    };
+  }
+  document.getElementById("v-dash").onclick = function () { if (view !== "dash") go("dash", function () { draft = null; }); };
+  document.getElementById("v-login").onclick = function () { if (view !== "login") go("login"); };
+  document.getElementById("v-set").onclick = function () { if (view !== "set") openSettings(); };
   document.querySelectorAll("[data-rv]").forEach(function (b) { b.onclick = function () { if (view !== "dash") { view = "dash"; draft = null; render(); } openReview(b.dataset.rv); }; });
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && RV) closeReview(); });
   var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { if (view === "dash") { growth(); passive(); } }, 150); });
