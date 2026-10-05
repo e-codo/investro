@@ -42,6 +42,7 @@ input, select, textarea { font: inherit; color: inherit; }
 /* шапка */
 .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 20px; }
 .meta { display: flex; align-items: baseline; gap: 6px 16px; flex-wrap: wrap; min-width: 0; }
+.top .logo { width: 24px; height: 24px; margin: 0; align-self: center; flex: none; }
 .meta span { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); white-space: nowrap; }
 .tools { display: flex; gap: 8px; }
 .ibtn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--ink-2); transition: border-color .15s, color .15s; }
@@ -436,7 +437,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     return '<section class="sec" data-reveal><div class="sec-h"><span class="lbl">' + h + "</span>" + (right || "") + "</div>" + body + "</section>";
   }
   function header(c) {
-    return '<header class="top"><div class="meta"><span class="num" id="clk">--:--</span><span>' + esc(stratName()) + "</span><span>Отчёт от " + dmy(c.last.d) + "</span></div>" +
+    return '<header class="top"><div class="meta">' + LOGO + '<span class="num" id="clk">--:--</span><span>' + esc(stratName()) + "</span><span>Отчёт от " + dmy(c.last.d) + "</span></div>" +
       '<div class="tools"><button class="ibtn" type="button" id="b-set" aria-label="Настройки">' + ICON.gear + '</button><button class="ibtn" type="button" id="b-out" aria-label="Выйти">' + ICON.out + "</button></div></header>";
   }
   function dash() {
@@ -714,7 +715,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   function openSettings() { go("set", function () { draft = JSON.parse(JSON.stringify(cfg)); }); }
   function settingsView() {
     var d = draft, sum = d.classes.reduce(function (a, c) { return a + (+c.pct || 0); }, 0);
-    var h = '<div class="set"><header class="top"><div class="meta"><span>Настройки</span></div></header><div class="hero"><h1>Настройки</h1></div>';
+    var h = '<div class="set"><header class="top"><div class="meta">' + LOGO + '<span>Настройки</span></div></header><div class="hero"><h1>Настройки</h1></div>';
     h += sec("Тексты", '<div class="mini"><div class="fld"><label for="s-t">Заголовок</label><input class="inp" id="s-t" value="' + esc(d.title) + '"></div><div class="fld"><label for="s-s">Подзаголовок</label><input class="inp" id="s-s" value="' + esc(d.sub) + '"></div><div class="fld"><label for="s-q">Цитата</label><textarea class="inp" id="s-q" style="height:auto;min-height:80px;padding:12px 14px">' + esc(d.quote) + "</textarea></div></div>");
     h += sec("Цель", '<div class="mini"><div class="fld"><label for="s-g">Сумма цели, ₽</label><input class="inp num" id="s-g" inputmode="numeric" value="' + Math.round(d.goal / 100) + '"></div><div class="grid2"><div class="fld"><label for="s-r">Ставка вклада, % годовых</label><input class="inp num" id="s-r" inputmode="decimal" value="' + String(d.rate).replace(".", ",") + '"></div><div class="fld"><label for="s-i">Инфляция, % годовых</label><input class="inp num" id="s-i" inputmode="decimal" value="' + String(d.infl).replace(".", ",") + '"></div></div></div>');
     h += sec("Вехи", '<div class="mini">' + d.milestones.slice().sort(function (a, b) { return a - b; }).map(function (m) { return '<div class="rowm"><div class="inp num" style="display:flex;align-items:center">' + rub0(m) + '</div><button type="button" class="danger" data-delm="' + m + '">Удалить</button></div>'; }).join("") + '<div class="rowm"><input class="inp num" id="s-nm" inputmode="numeric" placeholder="Новая веха, ₽"><button type="button" class="btn sm" id="s-addm">Добавить</button></div></div>');
