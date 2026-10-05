@@ -208,6 +208,9 @@ select.inp { appearance: auto; }
 .seg button { padding: 7px 14px; border-radius: 999px; font-size: 13px; color: var(--ink-2); transition: background .15s, color .15s; }
 .seg button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
 .seg button:not([aria-pressed="true"]):hover { background: var(--tint); color: var(--ink); }
+.drop { display: grid; gap: 8px; justify-items: center; text-align: center; border: 1px dashed var(--line); border-radius: 14px; padding: 26px 16px; cursor: pointer; transition: border-color .15s, background .15s; }
+.drop:hover, .drop.over { border-color: var(--ink); background: var(--tint); }
+.drop b { font-weight: 500; font-size: 18px; letter-spacing: -.01em; }
 .linkbtn { font-size: 14px; font-weight: 500; text-decoration: underline; text-underline-offset: 3px; justify-self: start; }
 
 /* вход (из e-codo/invest без изменений) */
@@ -334,15 +337,17 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   /* ---------- утилиты ---------- */
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function nb(s) { return s.replace(/ /g, " "); }
-  function money(k, sign) {
-    var neg = k < 0, a = Math.abs(k) / 100;
-    var s = a.toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    return nb((neg ? "−" : sign && k > 0 ? "+" : "") + s + " ₽");
+  /* Показ: суммы в целых рублях, проценты в целых, дробная часть отбрасывается (вниз по модулю). Расчёты идут в копейках без округления. exact — для полей ввода и сообщений проверки. */
+  function money(k, sign, exact) {
+    var a = Math.abs(k), s = exact ? (a / 100).toLocaleString("ru-RU", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : Math.floor(a / 100).toLocaleString("ru-RU");
+    var zero = exact ? a === 0 : Math.floor(a / 100) === 0;
+    return nb((zero ? "" : k < 0 ? "−" : sign ? "+" : "") + s + " ₽");
   }
-  function rub0(k) { return nb(Math.round(k / 100).toLocaleString("ru-RU") + " ₽"); }
-  function pct(x, d) { return nb((x < 0 ? "−" : "") + Math.abs(x).toLocaleString("ru-RU", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) + "%"); }
-  function pp(x) { var s = Math.abs(x).toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); return nb((x < 0 ? "−" : "+") + s + " п.п."); }
-  function kshort(k) { if (Math.abs(k) < 100000) return (k < 0 ? "−" : "+") + Math.round(Math.abs(k) / 100).toLocaleString("ru-RU") + " ₽"; var v = k / 100000; return (v < 0 ? "−" : "+") + Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + "к"; }
+  function rub0(k) { return money(k); }
+  function whole(x) { return Math.floor(Math.abs(x)); }
+  function pct(x) { var a = whole(x); return nb((a > 0 && x < 0 ? "−" : "") + a.toLocaleString("ru-RU") + "%"); }
+  function pp(x) { var a = whole(x); return nb((a > 0 ? (x < 0 ? "−" : "+") : "") + a.toLocaleString("ru-RU") + " п.п."); }
+  function kshort(k) { return money(k, true); }
   function dmy(iso) { var p = iso.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
   function days(a, b) { return (Date.parse(b) - Date.parse(a)) / 86400000; }
   function mlabel(ym) { var p = ym.split("-"); return MONTHS_FULL[+p[1] - 1] + " " + p[0]; }
@@ -451,7 +456,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     }
     if (v[3]) h += sec("Вехи", milestones(c));
     if (v[4]) h += sec("Календарь взносов", '<div id="cal"></div>', '<span class="lbl" id="streak">' + streak() + " мес. подряд без пропусков</span>");
-    if (v[5]) h += sec("Рост портфеля", '<div class="legend" style="margin-bottom:14px"><span><i style="background:var(--mid)"></i>Вложено своих</span><span><i style="background:var(--ink)"></i>Стоимость</span><span>Над парой — прибыль</span></div><div class="readout" id="ro"></div><div id="growth"></div>');
+    if (v[5]) h += sec("Рост портфеля", '<div class="legend" style="margin-bottom:14px"><span><i style="background:var(--mid)"></i>Вложено своих</span><span><i style="background:var(--ink)"></i>Стоимость</span><span><i style="background:var(--accent)"></i>Прибыль (шапка столбца)</span></div><div class="readout" id="ro"></div><div id="growth"></div>');
     if (v[6]) h += sec("Купонный календарь", '<div class="cplw" id="cpl-box"></div>', '<button class="linkbtn" type="button" id="cpl-tg" aria-expanded="false" aria-controls="cpl-box">Весь календарь</button>');
     if (v[7] && cfg.strategyOn) h += sec("Аллокация", alloc(c));
     if (v[8]) h += sec("Цитата", '<p class="quote">' + esc(cfg.quote) + "</p>");
@@ -545,7 +550,10 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       svg += '<g data-i="' + i + '" tabindex="0" style="cursor:pointer">';
       svg += '<rect x="' + (cx - gw / 2) + '" y="0" width="' + gw + '" height="' + H + '" fill="transparent"/>';
       svg += '<rect class="bar-grow" style="--d:' + d + 'ms" x="' + (cx - bw - 1) + '" y="' + (yb - ho) + '" width="' + bw + '" height="' + ho + '" rx="3" fill="#B3ADA1"/>';
-      svg += '<rect class="bar-grow" style="--d:' + (d + 40) + 'ms" x="' + (cx + 1) + '" y="' + (yb - hv) + '" width="' + bw + '" height="' + hv + '" rx="3" fill="#222222"/>';
+      var capH = s.value > own ? Math.min(hv, Math.max(3, (s.value - own) * sy)) : 0;
+      svg += '<g class="bar-grow" style="--d:' + (d + 40) + 'ms"><clipPath id="bc' + i + '"><rect x="' + (cx + 1) + '" y="' + (yb - hv) + '" width="' + bw + '" height="' + hv + '" rx="3"/></clipPath>' +
+        '<rect x="' + (cx + 1) + '" y="' + (yb - hv) + '" width="' + bw + '" height="' + hv + '" rx="3" fill="#222222"/>' +
+        (capH ? '<rect clip-path="url(#bc' + i + ')" x="' + (cx + 1) + '" y="' + (yb - hv) + '" width="' + bw + '" height="' + capH + '" fill="#E06238"/>' : "") + "</g>";
       svg += '<text class="bar-fade" style="--d:' + (d + 500) + 'ms" x="' + cx + '" y="' + (yb - Math.max(hv, ho) - 8) + '" font-size="11" text-anchor="middle">' + kshort(s.value - own) + "</text>";
       svg += '<text x="' + cx + '" y="' + (H - 8) + '" font-size="11" text-anchor="middle">' + MONTHS[+s.m.slice(5) - 1] + "</text></g>";
     });
@@ -612,6 +620,24 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     RV = scenario(kind); renderReview();
     document.querySelectorAll("[data-rv]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.rv === kind ? "true" : "false"); });
   }
+  function openUpload() {
+    var h = '<div class="ov" id="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="Загрузка отчёта">' +
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2>Загрузите отчёт</h2><button class="ibtn" type="button" id="up-x" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>' +
+      '<p class="sum">Отчёт ВТБ «Аналитика портфеля» за один месяц: с 1-го числа по последнее, для текущего месяца по сегодня. Файл читается в браузере и на сервер не отправляется.</p>' +
+      '<label class="drop" id="drop" for="up-file"><b>Перетащите файл или выберите</b><span class="note">PDF отчёта или таблица .xlsx по шаблону</span><span class="btn fill" role="button">Выбрать файл</span><input id="up-file" type="file" accept=".pdf,.xlsx" hidden></label>' +
+      '<div class="grp"><h3>Если формат PDF изменился</h3><p class="note" style="margin:0">Заполните таблицу по шаблону (можно через ИИ по тексту отчёта) и загрузите её здесь. Шаблон проверяет суммы и даты при вводе.</p>' +
+      '<button class="btn" type="button" id="up-tpl">Скачать шаблон таблицы (.xlsx)</button></div></div></div>';
+    document.getElementById("layer").innerHTML = h;
+    function pick() { document.getElementById("layer").innerHTML = ""; toast("Макет не читает файлы: показан пример разбора"); openReview("new"); }
+    document.getElementById("up-x").onclick = function () { document.getElementById("layer").innerHTML = ""; };
+    document.getElementById("ov").addEventListener("click", function (e) { if (e.target.id === "ov") document.getElementById("layer").innerHTML = ""; });
+    document.getElementById("up-file").onchange = pick;
+    document.getElementById("up-tpl").onclick = function () { toast("В макете скачивание отключено. В приложении кнопка отдаёт файл template-report.xlsx"); };
+    var dz = document.getElementById("drop");
+    ["dragenter", "dragover"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.add("over"); }); });
+    ["dragleave", "drop"].forEach(function (ev) { dz.addEventListener(ev, function (e) { e.preventDefault(); dz.classList.remove("over"); }); });
+    dz.addEventListener("drop", pick);
+  }
   function closeReview() {
     RV = null; document.getElementById("layer").innerHTML = "";
     document.querySelectorAll("[data-rv]").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
@@ -621,7 +647,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     var contribVal = r.manualContrib != null ? r.manualContrib : c.val;
     var posSum = r.pos.reduce(function (a, p) { return a + p.v; }, 0), diff = posSum + r.cash - r.value;
     var errors = [], warns = [];
-    if (Math.abs(diff) > 100) errors.push("Позиции и деньги (" + money(posSum + r.cash) + ") не сходятся со стоимостью портфеля (" + money(r.value) + "): разница " + money(diff, true) + ". Исправьте числа или загрузите другой отчёт.");
+    if (Math.abs(diff) > 100) errors.push("Позиции и деньги (" + money(posSum + r.cash, false, true) + ") не сходятся со стоимостью портфеля (" + money(r.value, false, true) + "): разница " + money(diff, true, true) + ". Исправьте числа или загрузите другой отчёт.");
     if (contribVal < 0) errors.push("Взнос месяца получился отрицательным. Проверьте период отчёта.");
     if (d > contribVal) errors.push("Налоговый вычет больше взноса месяца.");
     if (r.ps.slice(0, 7) !== r.pe.slice(0, 7)) errors.unshift("Отчёт охватывает несколько месяцев (" + dmy(r.ps) + " – " + dmy(r.pe) + "). Скачайте отчёт за один месяц: с 1-го по последнее число, для текущего месяца по сегодня.");
@@ -695,7 +721,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       '<div class="sum">Сумма долей: <b class="num">' + sum + '%</b>' + (sum === 100 ? "" : " (нужно ровно 100%)") + '</div><button type="button" class="linkbtn" id="s-addc"' + (d.classes.length >= 5 ? " disabled" : "") + '>Добавить класс (до 5)</button><div class="fld"><label for="s-sn">Имя стратегии</label><input class="inp" id="s-sn" placeholder="' + d.classes.map(function (c) { return c.pct; }).join(" / ") + '" value="' + esc(d.stratName) + '"></div></div>');
     h += sec("Бумаги", '<div class="mini">' + INSTR.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.t === "bond" ? "облигация" : "фонд") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
     h += sec("Блоки главного экрана", '<div class="mini">' + BLOCK_NAMES.map(function (n, i) { return '<label class="tgl"><input type="checkbox" data-b="' + i + '"' + (d.vis[i] ? " checked" : "") + "><span>" + (i + 1) + ". " + n + "</span></label>"; }).join("") + "</div>");
-    h += sec("Данные", '<div class="mini">' + S.slice().reverse().map(function (s) { return '<div class="rowm"><span class="num">' + mlabel(s.m) + " · " + money(s.value) + '</span><button type="button" class="danger" data-dels="' + s.m + '">Удалить</button></div>'; }).join("") + '<button type="button" class="linkbtn" id="s-all">Удалить все данные</button><div id="s-allbox"></div></div>');
+    h += sec("Данные", '<div class="mini">' + S.slice().reverse().map(function (s) { return '<div class="rowm"><span class="num">' + mlabel(s.m) + " · " + money(s.value) + '</span><button type="button" class="danger" data-dels="' + s.m + '">Удалить</button></div>'; }).join("") + '<button type="button" class="linkbtn" id="s-tpl">Скачать шаблон таблицы (.xlsx)</button><button type="button" class="linkbtn" id="s-all">Удалить все данные</button><div id="s-allbox"></div></div>');
     h += "</div>";
     h += '<div class="savebar"><div>' + (sum !== 100 ? '<div class="err">Сумма долей стратегии должна быть 100%.</div>' : "") + '<button class="btn ghost" type="button" id="s-cancel">Отмена</button><button class="btn fill" type="button" id="s-save"' + (sum !== 100 ? " disabled" : "") + ">Сохранить</button></div></div>";
     return h;
@@ -719,6 +745,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     document.querySelectorAll("[data-delc]").forEach(function (b) { b.onclick = function () { sync(); var i = +b.dataset.delc, gone = d.classes.splice(i, 1)[0], to = d.classes[0].id; INSTR.forEach(function (p) { if (p.c === gone.id) p.c = to; }); refreshPos(); var st = window.scrollY; render(); window.scrollTo(0, st); toast("Бумаги класса перенесены в «" + d.classes[0].name + "»"); }; });
     document.getElementById("s-addc").onclick = function () { sync(); d.classes.push({ id: "c" + Date.now(), name: "Новый класс", pct: 0 }); var st = window.scrollY; render(); window.scrollTo(0, st); };
     document.querySelectorAll("[data-dels]").forEach(function (b) { b.onclick = function () { toast("Макет: снимок не удалён"); }; });
+    document.getElementById("s-tpl").onclick = function () { toast("В макете скачивание отключено. В приложении кнопка отдаёт файл template-report.xlsx"); };
     document.getElementById("s-all").onclick = function () {
       document.getElementById("s-allbox").innerHTML = '<div class="fld"><label for="s-w">Введите слово «удалить»</label><input class="inp" id="s-w" autocomplete="off"></div><button type="button" class="btn sm" id="s-wgo" disabled>Удалить все данные</button>';
       var w = document.getElementById("s-w"), g = document.getElementById("s-wgo");
@@ -765,7 +792,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (view === "set") { app.innerHTML = settingsView(); bindSettings(); return; }
     app.innerHTML = dash();
     clock(); calendar(); growth(); passive(); renderCoupons(); var tg = document.getElementById("cpl-tg"); if (tg) tg.onclick = function () { cplOpen = !cplOpen; if (cplOpen) cplYear = 2026; renderCoupons(); }; reveal();
-    var f = document.getElementById("b-fab"); if (f) f.onclick = function () { openReview("new"); };
+    var f = document.getElementById("b-fab"); if (f) f.onclick = openUpload;
     var st = document.getElementById("b-set"); if (st) st.onclick = openSettings;
     var o = document.getElementById("b-out"); if (o) o.onclick = function () { go("login"); };
   }
