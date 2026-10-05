@@ -215,17 +215,10 @@ select.inp { appearance: auto; }
 body.is-login .login { min-height: calc(100dvh - 58px); }
 .login .err { border: 0; }
 
-/* экран ожидания между страницами: тёмный экран, логотипы плавно едут по горизонтали */
+/* экран ожидания между страницами: тёмный экран, логотип на месте, стрелка внутри плавно растёт */
 .wait { position: fixed; inset: 0; z-index: 60; background: var(--ink); color: var(--paper); display: grid; place-items: center; opacity: 0; visibility: hidden; transition: opacity .22s ease, visibility 0s .22s; }
 .wait.on { opacity: 1; visibility: visible; transition: opacity .22s ease; }
-.wait .lane { width: 100%; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); mask-image: linear-gradient(90deg, transparent, #000 22%, #000 78%, transparent); }
-.wait .strip { display: flex; width: max-content; animation: lane 6s linear infinite; }
-.wait .set { display: flex; gap: 56px; padding-right: 56px; }
-.wait svg { width: 64px; height: 64px; flex: none; color: var(--paper); }
-@keyframes lane { to { transform: translateX(-50%); } }
-@media (prefers-reduced-motion: reduce) { .wait .set + .set { display: none; } .wait .set svg:not(:first-child) { display: none; } .wait .set { padding-right: 0; } .wait .strip { margin: 0 auto; } }
-
-/* настройки */
+.wait .wlogo { width: 96px; height: 96px; color: var(--paper); }
 .set .hero { margin-top: 40px; }
 .mini { display: grid; gap: 10px; border: 1px solid var(--line); border-radius: 14px; padding: 14px; }
 .rowx { display: grid; grid-template-columns: minmax(0, 1fr) 90px auto; gap: 8px; align-items: center; }
@@ -244,7 +237,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
 <div class="pv">
   <div>
-    <p><b>Макет.</b> Пример данных, расчёты настоящие по формулам ТЗ. Ничего не сохраняется. Вход в макете: demo@mail.ru и пароль 12345678.</p>
+    <p><b>Макет.</b> Бумаги и суммы из вашего отчёта 04.10.2026, история прошлых месяцев и график купонов условные. Расчёты настоящие по формулам ТЗ. Ничего не сохраняется. Вход: demo@mail.ru и пароль 12345678.</p>
     <div class="row">
       <div class="seg" role="group" aria-label="Экран">
         <button type="button" id="v-login" aria-pressed="false">Вход</button>
@@ -281,26 +274,22 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
 
   /* ---------- данные примера (копейки) ---------- */
   var S = [
-    { m: "2026-04", d: "2026-04-30", ps: "2026-04-01", value: 602010, cash: 20010, dep: 600000, ded: 0, wd: 0, passive: 4120 },
-    { m: "2026-05", d: "2026-05-31", ps: "2026-04-01", value: 1107050, cash: 18200, dep: 500000, ded: 0, wd: 0, passive: 7850 },
-    { m: "2026-06", d: "2026-06-30", ps: "2026-04-01", value: 1619020, cash: 31050, dep: 500000, ded: 0, wd: 0, passive: 11200 },
-    { m: "2026-07", d: "2026-07-31", ps: "2026-04-01", value: 2138090, cash: 12400, dep: 500000, ded: 0, wd: 0, passive: 14830 },
-    { m: "2026-08", d: "2026-08-31", ps: "2026-04-01", value: 2674030, cash: 25600, dep: 500000, ded: 100000, wd: 0, passive: 17160 },
-    { m: "2026-09", d: "2026-09-30", ps: "2026-04-01", value: 3156060, cash: 9880, dep: 500000, ded: 0, wd: 0, passive: 20540 },
-    { m: "2026-10", d: "2026-10-04", ps: "2026-04-01", value: 3636873, cash: 25644, dep: 500000, ded: 0, wd: 0, passive: 23189 }
+    { m: "2026-08", d: "2026-08-31", ps: "2026-01-01", fd: "2026-08-05", value: 1201020, cash: 3120, dep: 1200000, ded: 0, wd: 0, passive: 8800 },
+    { m: "2026-09", d: "2026-09-30", ps: "2026-01-01", value: 2419055, cash: 18040, dep: 1200000, ded: 0, wd: 0, passive: 17900 },
+    { m: "2026-10", d: "2026-10-04", ps: "2026-01-01", value: 3636873, cash: 25644, dep: 1200000, ded: 0, wd: 0, passive: 23189 }
   ];
-  /* состав последнего снимка; class — id класса */
+  /* состав последнего снимка из отчёта 04.10.2026; class — id класса */
   var POS = [
-    { n: "ОФЗ-ПД 26238", t: "bond", c: "bond", q: 6, v: 587100, price: 97850, avg: 97100, secid: "SU26238RMFS4" },
-    { n: "Корпоративная облигация 001Р-02", t: "bond", c: "bond", q: 17, v: 1635400, price: 96200, avg: 96900, secid: "RU000A10ABC1", floater: true },
-    { n: "Фонд «Индекс Мосбиржи»", t: "fund", c: "eq", q: 55, v: 717420, price: 13044, avg: 12720 },
-    { n: "Фонд «Ликвидность»", t: "fund", c: "liq", q: 3532, v: 671309, price: 190, avg: 189 }
+    { n: "ОФЗ 26245", t: "bond", c: "bond", q: 6, v: 520386, secid: "" },
+    { n: "РЖД 1Р-44R", t: "bond", c: "bond", q: 17, v: 1657483, secid: "", floater: true },
+    { n: "ВИМ - Индекс Мосбиржи", t: "fund", c: "eq", q: 55, v: 691075 },
+    { n: "Ликвидность", t: "fund", c: "liq", q: 3532, v: 742285 }
   ];
-  /* факт купонов по месяцам (ключ YYYY-MM) и график на 1 шт. */
-  var FACT = { "2026-07": 14060, "2026-08": 17100, "2026-09": 19499 };
+  /* факт купонов из отчёта по месяцам; график на 1 шт. условный (в отчёте будущих купонов нет) */
+  var FACT = { "2026-09": 19499 };
   var SCHED = [
-    { who: 1, per: 1147, every: 1, day: 24 },                    // плавающий, раз в месяц
-    { who: 0, per: 3690, months: [10, 4], day: 18 }              // ОФЗ, ноябрь и май (индексы 0..11)
+    { who: 1, per: 1147, every: 1, day: 24 },
+    { who: 0, per: 3690, months: [10, 4], day: 18 }
   ];
   var MILESTONES0 = [1000000, 2500000, 10000000, 25000000, 50000000, 100000000, 200000000];
   var BLOCK_NAMES = ["Заголовок", "Стоимость портфеля", "Прогресс к цели", "Вехи", "Календарь взносов", "Рост портфеля", "Пассивный доход", "Купонный календарь", "Аллокация", "Цитата"];
@@ -311,7 +300,6 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     quote: "Богатство строится не рывком, а привычкой.",
     goal: 300000000,
     rate: 14, infl: 6.5,
-    account: "40817810100020231234",
     strategyOn: true,
     classes: [{ id: "bond", name: "Облигации", pct: 60 }, { id: "eq", name: "Акции", pct: 20 }, { id: "liq", name: "Ликвидность", pct: 20 }],
     stratName: "",
@@ -334,7 +322,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   function rub0(k) { return nb(Math.round(k / 100).toLocaleString("ru-RU") + " ₽"); }
   function pct(x, d) { return nb((x < 0 ? "−" : "") + Math.abs(x).toLocaleString("ru-RU", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }) + "%"); }
   function pp(x) { var s = Math.abs(x).toLocaleString("ru-RU", { minimumFractionDigits: 1, maximumFractionDigits: 1 }); return nb((x < 0 ? "−" : "+") + s + " п.п."); }
-  function kshort(k) { var v = k / 100000; return (v < 0 ? "−" : "+") + Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + "к"; }
+  function kshort(k) { if (Math.abs(k) < 100000) return (k < 0 ? "−" : "+") + Math.round(Math.abs(k) / 100).toLocaleString("ru-RU") + " ₽"; var v = k / 100000; return (v < 0 ? "−" : "+") + Math.abs(v).toLocaleString("ru-RU", { maximumFractionDigits: 1, minimumFractionDigits: 1 }) + "к"; }
   function dmy(iso) { var p = iso.split("-"); return p[2] + "." + p[1] + "." + p[0]; }
   function days(a, b) { return (Date.parse(b) - Date.parse(a)) / 86400000; }
   function mlabel(ym) { var p = ym.split("-"); return MONTHS_FULL[+p[1] - 1] + " " + p[0]; }
@@ -353,7 +341,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     for (i = 0; i < S.length; i++) { own += net(S[i]) - S[i].wd; ded += S[i].ded; }
     var last = S[S.length - 1];
     var profit = last.value - own;
-    var flows = S.map(function (s, i) { return { d: i === 0 ? s.ps : s.d, v: -(net(s) - s.wd) }; });
+    var flows = S.map(function (s, i) { return { d: i === 0 ? s.fd : s.d, v: -(net(s) - s.wd) }; });
     flows.push({ d: last.d, v: last.value });
     var hist = days(flows[0].d, last.d);
     var xirr = hist >= 90 ? xirrOf(flows) : null;
@@ -385,8 +373,8 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       else {
         var qB = POS[1].q, qA = POS[0].q;
         // индексы месяцев: m-1
-        var kB = qB * SCHED[0].per; sum += kB; items.push({ n: "Корп. 001Р-02", k: kB, a: true });
-        if (SCHED[1].months.indexOf(m - 1) > -1) { var kA = qA * SCHED[1].per; sum += kA; items.push({ n: "ОФЗ 26238", k: kA, a: false }); }
+        var kB = qB * SCHED[0].per; sum += kB; items.push({ n: "РЖД 1Р-44R", k: kB, a: true });
+        if (SCHED[1].months.indexOf(m - 1) > -1) { var kA = qA * SCHED[1].per; sum += kA; items.push({ n: "ОФЗ 26245", k: kA, a: false }); }
       }
       out.push({ key: key, y: y, m: m, past: past, now: i === 3, sum: sum, items: items });
       m++; if (m > 12) { m = 1; y++; }
@@ -574,15 +562,15 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   var RV = null;
   function scenario(kind) {
     var base = {
-      new: { mode: "new", month: "2026-11", date: "2026-11-29", ps: "2026-04-01", pe: "2026-11-29", dep: 4100000, wd: 0, value: 4190530, cash: 31012, prevKey: "2026-10", ded: 0, fee: 3425,
-        pos: [{ n: POS[0].n, q: 6, v: 588800, c: "bond", t: "bond", secid: "SU26238RMFS4" }, { n: POS[1].n, q: 18, v: 1737000, c: "bond", t: "bond", secid: "RU000A10ABC1" }, { n: POS[2].n, q: 55, v: 770000, c: "eq", t: "fund" }, { n: POS[3].n, q: 5600, v: 1063718, c: "liq", t: "fund" }],
-        coupons: ["Корпоративная облигация 001Р-02 · 24.10.2026 · 194,99 ₽"] },
-      upd: { mode: "upd", month: "2026-10", date: "2026-10-07", ps: "2026-04-01", pe: "2026-10-07", dep: 3600000, wd: 0, value: 3640217, cash: 25644, prevKey: "2026-09", ded: 0, fee: 3425,
-        pos: [{ n: POS[0].n, q: 6, v: 587700, c: "bond", t: "bond", secid: "SU26238RMFS4" }, { n: POS[1].n, q: 17, v: 1638000, c: "bond", t: "bond", secid: "RU000A10ABC1" }, { n: POS[2].n, q: 55, v: 717564, c: "eq", t: "fund" }, { n: POS[3].n, q: 3532, v: 671309, c: "liq", t: "fund" }],
-        coupons: ["Корпоративная облигация 001Р-02 · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] },
-      bad: { mode: "upd", month: "2026-10", date: "2026-10-04", ps: "2026-04-01", pe: "2026-10-04", dep: 3600000, wd: 0, value: 3636873, cash: 25644, prevKey: "2026-09", ded: 0, fee: 3425,
-        pos: [{ n: POS[0].n, q: 6, v: 587100, c: "bond", t: "bond", secid: "SU26238RMFS4" }, { n: POS[1].n, q: 17, v: 1635400, c: "bond", t: "bond", secid: "RU000A10ABC1" }, { n: POS[2].n, q: 55, v: 717420, c: "eq", t: "fund" }, { n: POS[3].n, q: 3532, v: 546809, c: "liq", t: "fund" }],
-        coupons: ["Корпоративная облигация 001Р-02 · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] }
+      new: { mode: "new", month: "2026-11", date: "2026-11-29", ps: "2026-01-01", pe: "2026-11-29", dep: 4800000, wd: 0, value: 4125012, cash: 31012, ded: 0,
+        pos: [{ n: "ОФЗ 26245", q: 6, v: 524000, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 18, v: 1750000, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 700000, c: "eq", t: "fund" }, { n: "Ликвидность", q: 5300, v: 1120000, c: "liq", t: "fund" }],
+        coupons: ["РЖД 1Р-44R · 24.10.2026 · 194,99 ₽"] },
+      upd: { mode: "upd", month: "2026-10", date: "2026-10-07", ps: "2026-01-01", pe: "2026-10-07", dep: 3600000, wd: 0, value: 3642194, cash: 25644, ded: 0,
+        pos: [{ n: "ОФЗ 26245", q: 6, v: 523000, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 17, v: 1658900, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 692300, c: "eq", t: "fund" }, { n: "Ликвидность", q: 3532, v: 742350, c: "liq", t: "fund" }],
+        coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] },
+      bad: { mode: "upd", month: "2026-10", date: "2026-10-04", ps: "2026-01-01", pe: "2026-10-04", dep: 3600000, wd: 0, value: 3636873, cash: 25644, ded: 0,
+        pos: [{ n: "ОФЗ 26245", q: 6, v: 520386, c: "bond", t: "bond", secid: "" }, { n: "РЖД 1Р-44R", q: 17, v: 1657483, c: "bond", t: "bond", secid: "" }, { n: "ВИМ - Индекс Мосбиржи", q: 55, v: 691075, c: "eq", t: "fund" }, { n: "Ликвидность", q: 3532, v: 617785, c: "liq", t: "fund" }],
+        coupons: ["РЖД 1Р-44R · 24.09.2026 · 194,99 ₽ (уже есть, пропущен)"] }
     };
     var s = JSON.parse(JSON.stringify(base[kind])); s.kind = kind; return s;
   }
@@ -612,14 +600,13 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     if (contribVal < 0) errors.push("Взнос месяца получился отрицательным. Проверьте период отчёта.");
     if (d > contribVal) errors.push("Налоговый вычет больше взноса месяца.");
     if (c.warn) warns.push("Периоды отчётов пересекаются. Проверьте взнос вручную.");
-    if (r.account !== undefined && r.account !== cfg.account) errors.push("Номер счёта в отчёте не совпадает с настройками.");
     var h = '<div class="ov" id="ov"><div class="sheet" role="dialog" aria-modal="true" aria-label="Проверка отчёта">';
     h += '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px"><h2>Проверьте отчёт</h2><button class="ibtn" type="button" id="rv-x" aria-label="Закрыть"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
     h += '<span class="mode">' + (r.mode === "new" ? "Отметить месяц · снимка за этот месяц нет" : "Актуализировать данные · снимок за этот месяц уже есть") + "</span>";
     h += '<div class="grid2"><div class="fld"><label for="rv-m">Месяц снимка</label><select class="inp" id="rv-m">';
     [["2026-09", "сен 2026"], ["2026-10", "окт 2026"], ["2026-11", "ноя 2026"]].forEach(function (o) { h += '<option value="' + o[0] + '"' + (o[0] === r.month ? " selected" : "") + ">" + o[1] + "</option>"; });
     h += '</select></div><div class="fld"><label>Дата отчёта</label><div class="inp num" style="display:flex;align-items:center">' + dmy(r.date) + "</div></div></div>";
-    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + " · счёт " + maskAcc(cfg.account) + "</div>";
+    h += '<div class="note">Период отчёта ' + dmy(r.ps) + " – " + dmy(r.pe) + "</div>";
     h += '<div class="grid2"><div class="fld"><label for="rv-v">Стоимость, ₽</label><input class="inp num" id="rv-v" inputmode="decimal" value="' + (r.value / 100).toFixed(2).replace(".", ",") + '"></div><div class="fld"><label for="rv-c">Деньги, ₽</label><input class="inp num" id="rv-c" inputmode="decimal" value="' + (r.cash / 100).toFixed(2).replace(".", ",") + '"></div></div>';
     h += '<div class="grp"><h3>Взнос месяца</h3><div class="calc"><div><span>Пополнения в отчёте</span><span class="num">' + money(r.dep) + "</span></div><div><span>Взнос месяца</span><b class=\"num\">" + money(contribVal) + '</b></div><div><span class="note" style="flex:1 1 100%">' + esc(c.rule) + "</span></div></div>";
     h += '<div class="grid2"><div class="fld"><label for="rv-mc">Взнос вручную, ₽</label><input class="inp num" id="rv-mc" inputmode="decimal" placeholder="авто" value="' + (r.manualContrib != null ? (r.manualContrib / 100).toFixed(2).replace(".", ",") : "") + '"></div><div class="fld"><label for="rv-d">Из них налоговый вычет, ₽</label><input class="inp num" id="rv-d" inputmode="decimal" value="' + (d / 100).toFixed(2).replace(".", ",") + '"></div></div>';
@@ -628,7 +615,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     r.pos.forEach(function (p, i) {
       h += '<div class="pos"><div class="pos-h"><b>' + esc(p.n) + '</b><span class="num">' + p.q + " шт. · " + money(p.v) + '</span></div><div class="pos-f"><div class="fld"><label for="rv-k' + i + '">Класс</label><select class="inp sm" id="rv-k' + i + '" data-k="' + i + '">' +
         cfg.classes.map(function (k) { return '<option value="' + k.id + '"' + (k.id === p.c ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>" +
-        (p.t === "bond" ? '<div class="fld"><label for="rv-s' + i + '">SECID</label><input class="inp sm" id="rv-s' + i + '" value="' + esc(p.secid) + '"></div>' : '<div class="fld"><label>SECID</label><div class="hint" style="padding-top:10px">только для облигаций</div></div>') + "</div></div>";
+        (p.t === "bond" ? '<div class="fld"><label for="rv-s' + i + '">SECID</label><input class="inp sm" id="rv-s' + i + '" value="' + esc(p.secid) + '" placeholder="подтвердите SECID"></div>' : '<div class="fld"><label>SECID</label><div class="hint" style="padding-top:10px">только для облигаций</div></div>') + "</div></div>";
     });
     h += "</div>";
     h += '<div class="grp"><h3>Новые купоны</h3>' + r.coupons.map(function (x) { return '<div class="ok">' + esc(x) + "</div>"; }).join("") + '<div class="hint">Дубли отсекаются по названию, дате и сумме.</div></div>';
@@ -674,7 +661,6 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
       '<div class="sum">Сумма долей: <b class="num">' + sum + '%</b>' + (sum === 100 ? "" : " (нужно ровно 100%)") + '</div><button type="button" class="linkbtn" id="s-addc"' + (d.classes.length >= 5 ? " disabled" : "") + '>Добавить класс (до 5)</button><div class="fld"><label for="s-sn">Имя стратегии</label><input class="inp" id="s-sn" placeholder="' + d.classes.map(function (c) { return c.pct; }).join(" / ") + '" value="' + esc(d.stratName) + '"></div></div>');
     h += sec("Бумаги", '<div class="mini">' + POS.map(function (p, i) { return '<div class="rowm"><div style="min-width:0"><div style="overflow-wrap:anywhere">' + esc(p.n) + '</div><div class="hint">' + (p.secid ? "SECID " + esc(p.secid) : "без SECID") + '</div></div><select class="inp sm" data-pc="' + i + '" aria-label="Класс" style="width:auto;max-width:150px">' + d.classes.map(function (k) { return '<option value="' + k.id + '"' + (p.c === k.id ? " selected" : "") + ">" + esc(k.name) + "</option>"; }).join("") + "</select></div>"; }).join("") + "</div>");
     h += sec("Блоки главного экрана", '<div class="mini">' + BLOCK_NAMES.map(function (n, i) { return '<label class="tgl"><input type="checkbox" data-b="' + i + '"' + (d.vis[i] ? " checked" : "") + "><span>" + (i + 1) + ". " + n + "</span></label>"; }).join("") + "</div>");
-    h += sec("Счёт", '<div class="mini"><div class="fld"><label for="s-a">Номер счёта для проверки отчётов</label><input class="inp num" id="s-a" value="' + esc(d.account) + '"></div><div class="hint">В интерфейсе показывается маской: ' + maskAcc(d.account) + "</div></div>");
     h += sec("Данные", '<div class="mini">' + S.slice().reverse().map(function (s) { return '<div class="rowm"><span class="num">' + mlabel(s.m) + " · " + money(s.value) + '</span><button type="button" class="danger" data-dels="' + s.m + '">Удалить</button></div>'; }).join("") + '<button type="button" class="linkbtn" id="s-all">Удалить все данные</button><div id="s-allbox"></div></div>');
     h += "</div>";
     h += '<div class="savebar"><div>' + (sum !== 100 ? '<div class="err">Сумма долей стратегии должна быть 100%.</div>' : "") + '<button class="btn ghost" type="button" id="s-cancel">Отмена</button><button class="btn fill" type="button" id="s-save"' + (sum !== 100 ? " disabled" : "") + ">Сохранить</button></div></div>";
@@ -687,7 +673,7 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
     function sync() {
       d.title = val("s-t"); d.sub = val("s-s"); d.quote = val("s-q");
       d.goal = Math.round(numv("s-g")) * 100; d.rate = numv("s-r"); d.infl = numv("s-i");
-      d.strategyOn = document.getElementById("s-on").checked; d.stratName = val("s-sn"); d.account = val("s-a");
+      d.strategyOn = document.getElementById("s-on").checked; d.stratName = val("s-sn");
       document.querySelectorAll("[data-cn]").forEach(function (e) { d.classes[+e.dataset.cn].name = e.value; });
       document.querySelectorAll("[data-cp]").forEach(function (e) { d.classes[+e.dataset.cp].pct = Math.round(parseFloat(e.value) || 0); });
       document.querySelectorAll("[data-b]").forEach(function (e) { d.vis[+e.dataset.b] = e.checked; });
@@ -751,9 +737,14 @@ body.is-login .login { min-height: calc(100dvh - 58px); }
   }
 
   /* ---------- переход между страницами с экраном ожидания ---------- */
+  var LP1 = LOGO.match(/<path d="([^"]+)"/g)[0].slice(9, -1), LP2 = LOGO.match(/<path d="([^"]+)"/g)[1].slice(9, -1);
+  /* Рамка и круг стоят на месте. Стрелка внутри рамки выезжает слева направо, держится и плавно убирается, цикл 3,2 с. */
   function waitHtml() {
-    var one = '<div class="set">' + new Array(9).join(LOGO.replace(' class="logo"', "").replace(' role="img" aria-label="Моя стройка фундамента"', ' aria-hidden="true"')) + "</div>";
-    return '<div class="lane"><div class="strip">' + one + one + "</div></div>";
+    var anim = reduce ? "" : '<animate attributeName="width" values="0;11.4;11.4;0" keyTimes="0;.55;.8;1" calcMode="spline" keySplines=".22 .8 .24 1;0 0 1 1;.6 0 .8 .2" dur="3.2s" repeatCount="indefinite"/>';
+    return '<svg class="wlogo" viewBox="0 0 24 24" aria-hidden="true"><defs>' +
+      '<clipPath id="cf"><path clip-rule="evenodd" d="M0 0H24V24H0Z M6.35 6.35H17.65V17.65H6.35Z"/></clipPath>' +
+      '<clipPath id="ca"><rect x="6.3" y="6.3" width="' + (reduce ? 11.4 : 0) + '" height="11.4">' + anim + "</rect></clipPath></defs>" +
+      '<g fill="currentColor"><path d="' + LP1 + '"/><path clip-path="url(#cf)" d="' + LP2 + '"/><path clip-path="url(#ca)" d="' + LP2 + '"/></g></svg>';
   }
   function go(next, before) {
     if (busy) return; busy = true;
